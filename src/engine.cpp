@@ -64,6 +64,11 @@ bool Engine::setCards(const CardSet &cardSet)
         return false;
     }
 
+    if (mPlayers.size() < 2) {
+        // add more players
+        return false;
+    }
+
     mTrumpSuit = cardSet.get(cardSet.size() - 1)->suit();
 
     mDeckCards = new CardSet(cardSet);
@@ -132,7 +137,7 @@ PlayerId *Engine::pickNext(PlayerId *after)
 
 void Engine::addGameObserver(GameObserver &observer)
 {
-    mGameObservers.insert(&observer);
+    mGameObservers.push_back(&observer);
 }
 
 bool Engine::gameEnded() const

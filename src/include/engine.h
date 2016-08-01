@@ -23,7 +23,9 @@ class GameObserver;
  * - add game observers (optional)
  * - set cards (mandatory)
  * - call playRound till it returns true
- * Note: for unit testing protected visibility is used instead of private
+ *
+ * The class is not intended to be "thread safe" and designed for single thread for the sake of simplicity.
+ * All players and observers will be invoked "inside" Engine::playRound().
  */
 class Engine
 {
@@ -46,7 +48,7 @@ class Engine
     /**
      * @brief Game flow observers
      */
-    std::set<GameObserver*> mGameObservers;
+    std::vector<GameObserver*> mGameObservers;
     /**
      * @brief Cards left in the deck.
      */
@@ -67,20 +69,28 @@ class Engine
     Suit mTrumpSuit;
 
 public:
+    /**
+     * @brief Ctor
+     */
     Engine();
+    /**
+     * @brief Dtor
+     */
     virtual ~Engine();
 
     /**
      * @brief Adds player to the game.
      *
      * Adds player to the game. Order of adding players defines moves order: i.e. first added player will make first move,
-     *
+     * Adding same player more than once is allowed but game flow in the case will be unexpected.
      * @param player player instance to add
      * @return id for the player or NULL if player not added (for example if game started already)
      */
     PlayerId* add(Player& player);
     /**
      * @brief Adds game observer
+     *
+     * Adding duplicated observer is OK: each observer considered as unique though, i.e. observer added twice will receive twice amount of notifications.
      * @param observer observer to add
      */
     void addGameObserver(GameObserver& observer);

@@ -29,7 +29,7 @@ class TestPlayer: public decore::Player {
 
     }
 
-    void cardsDopped(const PlayerId&, const CardSet&)
+    void cardsDropped(const PlayerId&, const CardSet&)
     {
 
     }
@@ -59,6 +59,41 @@ class TestPlayer: public decore::Player {
 
 };
 
+void EngineTest::testAddPlayers()
+{
+    TestEngine engine;
+
+    // set used to check uniqueness of ids
+    std::set<PlayerId*> playerIds;
+
+    Player* players[] = {
+        new TestPlayer(),
+        new TestPlayer(),
+        new TestPlayer(),
+        new TestPlayer(),
+        NULL
+    };
+
+    // add players
+    Player** playerPtr = players;
+    while(*playerPtr) {
+        PlayerId* added = engine.add(**playerPtr);
+        CPPUNIT_ASSERT(added);
+        CPPUNIT_ASSERT(playerIds.insert(added).second);
+        playerPtr++;
+    }
+}
+
+void EngineTest::testAddDuplicatedPlayers()
+{
+    TestEngine engine;
+    TestPlayer player;
+    PlayerId* id0, *id1;
+    CPPUNIT_ASSERT(id0 = engine.add(player));
+    CPPUNIT_ASSERT(id1 = engine.add(player));
+    CPPUNIT_ASSERT(id0 != id1);
+}
+
 void EngineTest::testPickNext()
 {
     TestEngine engine;
@@ -75,7 +110,6 @@ void EngineTest::testPickNext()
 
     // add players
     Player** playerPtr = players;
-
     while(*playerPtr) {
         PlayerId* added = engine.add(**playerPtr);
         CPPUNIT_ASSERT(added);
@@ -83,7 +117,7 @@ void EngineTest::testPickNext()
         playerPtr++;
     }
 
-    // not existing player id
+    // check that there's no next player for not existing player id
     CPPUNIT_ASSERT(!engine.pickNext(NULL));
 
     // check pickNext

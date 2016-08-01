@@ -52,15 +52,25 @@ bool CardSet::deal(std::map<PlayerId *, CardSet> &playersCards, unsigned int max
     return cardsAmount != mCards.size();
 }
 
-void CardSet::shuffle()
+unsigned int CardSet::shuffle()
 {
     std::vector<Card> cards(mCards);
+    std::vector<Card> origin(mCards);
     mCards.clear();
     std::srand(std::time(NULL));
     while (!cards.empty()) {
         int index = std::rand() * (cards.size() - 1) / RAND_MAX;
         mCards.push_back(*cards.erase(cards.begin() + index));
     }
+
+    unsigned int notShuffledCards = 0;
+
+    for(unsigned int i = 0, end = mCards.size(); i < end; ++i) {
+        if (origin.at(i) == mCards.at(i)) {
+            notShuffledCards++;
+        }
+    }
+    return notShuffledCards;
 }
 
 void CardSet::generate(const Rank *ranks, unsigned int ranksSize, const Suit *suits, unsigned int suitsSize)

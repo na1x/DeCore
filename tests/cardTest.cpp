@@ -1,3 +1,5 @@
+#include <cstdio>
+
 #include "cardTest.h"
 #include "cardSet.h"
 #include "card.h"
@@ -53,7 +55,7 @@ void CardTest::testAdd()
     PlayerId id;
     cards[&id] = CardSet();
 
-    set.deal(cards, 6);
+    CPPUNIT_ASSERT(set.deal(cards, 6));
 
     const CardSet& dealCards = cards[&id];
     CPPUNIT_ASSERT(1 == dealCards.size());
@@ -93,10 +95,21 @@ void CardTest::testShuffle()
 
     CardSet original(set);
 
-    set.shuffle();
+    unsigned int notShuffled = set.shuffle();
+
+    unsigned int notShuffledActual = 0;
+
+    for(unsigned int i = 0, end = set.size(); i < end; ++i) {
+        if (*original.get(i) == *set.get(i)) {
+            ++notShuffledActual;
+        }
+    }
 
     CPPUNIT_ASSERT(original.size() == set.size());
     CPPUNIT_ASSERT(!(original == set));
+    char buf[1024];
+    snprintf(buf, sizeof(buf), "notShuffledActual %u, notShuffled %u", notShuffledActual, notShuffled);
+    CPPUNIT_ASSERT_MESSAGE(buf, notShuffledActual == notShuffled);
 }
 
 void CardTest::testGet()
