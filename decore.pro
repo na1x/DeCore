@@ -16,7 +16,8 @@ SOURCES += \
     src/card.cpp \
     src/cardSet.cpp \
     src/engine.cpp \
-    src/round.cpp
+    src/round.cpp \
+    src/rules.cpp
 
 HEADERS += \
     src/include/card.h \
@@ -27,7 +28,8 @@ HEADERS += \
     src/include/playerId.h \
     src/include/round.h \
     src/include/rank.h \
-    src/include/suit.h
+    src/include/suit.h \
+    src/include/rules.h
 unix {
     target.path = /usr/lib
     INSTALLS += target

@@ -120,13 +120,7 @@ public:
      */
     bool playRound();
 
-protected:
-    /**
-     * @brief Returns next player in the player queue after the player
-     * @param after defines player id
-     * @return next player id
-     */
-    PlayerId* pickNext(PlayerId* after);
+private:
     /**
      * @brief Checks if the game is ended
      * @return true if ended

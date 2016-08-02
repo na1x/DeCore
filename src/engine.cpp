@@ -3,6 +3,7 @@
 #include "engine.h"
 #include "round.h"
 #include "player.h"
+#include "rules.h"
 
 namespace decore {
 
@@ -98,41 +99,18 @@ bool Engine::playRound()
     // pick current player as first attacker
     attackers.push_back(mCurrentPlayer);
     // pick next player as defender
-    PlayerId* defender = pickNext(mCurrentPlayer);
+    PlayerId* defender = Rules::pickNext(mGeneratedIds, mCurrentPlayer);
     // gather rest players as additional attackers
     PlayerId* attacker = defender;
-    while((attacker = pickNext(attacker)) != mCurrentPlayer) {
+    while((attacker = Rules::pickNext(mGeneratedIds, attacker)) != mCurrentPlayer) {
         attackers.push_back(attacker);
     }
 
-    // 1. deal cards
-    // 2. make moves
-    // 3. till round complete
-    // 4. check if game ended
-
     mDeckCards->deal(mPlayersCards, MAX_CARDS);
 
-    Round round(attackers, defender);
-
-    while(round.makeMove());
+    Round(attackers, defender, mPlayers, mGameObservers, *mDeckCards, mPlayersCards).play();
 
     return !gameEnded();
-}
-
-PlayerId *Engine::pickNext(PlayerId *after)
-{
-    std::vector<PlayerId*>::iterator current = std::find(mGeneratedIds.begin(), mGeneratedIds.end(), after);
-
-    if (mGeneratedIds.end() == current) {
-        return NULL;
-    }
-
-    std::vector<PlayerId*>::iterator next = current + 1;
-
-    if (mGeneratedIds.end() == next) {
-        next = mGeneratedIds.begin();
-    }
-    return *next;
 }
 
 void Engine::addGameObserver(GameObserver &observer)

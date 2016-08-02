@@ -1,25 +1,26 @@
 #include "engineTest.h"
 #include "engine.h"
 #include "player.h"
+#include "rules.h"
 
 using namespace decore;
 
 class TestEngine: public decore::Engine {
-public:
-    PlayerId* pickNext(PlayerId* after)
-    {
-        return Engine::pickNext(after);
-    }
 };
 
 class TestPlayer: public decore::Player {
 
-    void cardsReceived(const PlayerId&, const CardSet&)
+    void gameStarted(Suit &, const CardSet &)
     {
 
     }
 
-    void cardsReceived(const PlayerId&, int)
+    void cardsReceived(PlayerId*, const CardSet&)
+    {
+
+    }
+
+    void cardsReceived(PlayerId*, int)
     {
 
     }
@@ -29,24 +30,24 @@ class TestPlayer: public decore::Player {
 
     }
 
-    void cardsDropped(const PlayerId&, const CardSet&)
+    void cardsDropped(PlayerId*, const CardSet&)
     {
 
     }
 
-    int attack(const PlayerId&, const CardSet&)
+    unsigned int attack(PlayerId*, const CardSet&)
     {
         // dont care
         return 0;
     }
 
-    bool attack(const PlayerId&, const CardSet&, int&)
+    bool attack(PlayerId*, const CardSet&, unsigned int&)
     {
         // dont care
         return false;
     }
 
-    bool defend(const PlayerId&, const CardSet&, int&)
+    bool defend(PlayerId*, const CardSet&, unsigned int&)
     {
         // dont care
         return false;
@@ -118,7 +119,7 @@ void EngineTest::testPickNext()
     }
 
     // check that there's no next player for not existing player id
-    CPPUNIT_ASSERT(!engine.pickNext(NULL));
+    CPPUNIT_ASSERT(!Rules::pickNext(playerIds, NULL));
 
     // check pickNext
     for(std::vector<PlayerId*>::iterator it = playerIds.begin(); it != playerIds.end(); ++it) {
@@ -126,7 +127,7 @@ void EngineTest::testPickNext()
         if (next == playerIds.end()) {
             next = playerIds.begin();
         }
-        CPPUNIT_ASSERT(*next == engine.pickNext(*it));
+        CPPUNIT_ASSERT(*next == Rules::pickNext(playerIds, *it));
     }
 
     // cleanup players
