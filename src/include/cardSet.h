@@ -12,13 +12,29 @@ namespace decore
 
 /**
  * @brief The card set
+ *
+ * - Initially created empty could be filled with cards, see generate()
+ * - Any amount of cards could be added with add()
  */
 class CardSet
 {
+    /**
+     * @brief Abstract condition
+     */
+    class Condition {
+    public:
+        /**
+         * @brief Tests the card
+         * @param card card to test
+         * @return true if condition passed
+         */
+        virtual bool test(const Card& card) const = 0;
+    };
 
-private:
     /**
      * Cards in the set
+     *
+     * TODO: replace with std::set
      */
     std::vector<Card> mCards;
 
@@ -31,6 +47,8 @@ public:
 
     /**
      * @brief Adds the card to the card set
+     *
+     * Note: The `card` is just added without check if same card already exist in the set
      * @param card card to add
      */
     void add(const Card& card);
@@ -79,6 +97,28 @@ public:
      * @return true if equal
      */
     bool operator == (const CardSet& other) const;
+    /**
+     * @brief Appends all cards with the `rank` from the card set to `cards`
+     * @param rank rank
+     * @param cards destination card set
+     */
+    void getCards(const Rank& rank, CardSet& cards) const;
+    /**
+     * @brief Appends all cards with the `suit` from the card set to `cards`
+     * @param suit suit
+     * @param cards destination card set
+     */
+    void getCards(const Suit& suit, CardSet& cards) const;
+    /**
+     * @brief Appends cards from `with` to `cards` only if in this set exists card with same suit OR rank
+     *
+     * @param with card set to "intersect" with
+     * @param cards destination card set
+     */
+    void intersect(const CardSet& with, CardSet& cards) const;
+
+private:
+    void filter(const Condition& condition, CardSet& cards) const;
 };
 
 }

@@ -28,7 +28,7 @@ public:
      * @param suit suit of the card
      * @param rank rank of the card
      */
-    Card(Suit suit, Rank rank);
+    Card(const Suit& suit, const Rank& rank);
     /**
      * @brief operator ==
      *
@@ -41,12 +41,12 @@ public:
      * @brief Rank getter
      * @return rank of the card
      */
-    Rank rank() const;
+    const Rank& rank() const;
     /**
      * @brief Suit getter
      * @return suit of the card
      */
-    Suit suit() const;
+    const Suit& suit() const;
 };
 
 }

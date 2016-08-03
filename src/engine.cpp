@@ -7,7 +7,7 @@
 
 namespace decore {
 
-const unsigned int MAX_CARDS = 6;
+const unsigned int MAX_PLAYER_CARDS = 6;
 
 
 class PlayerIdImplementation: public PlayerId
@@ -106,7 +106,7 @@ bool Engine::playRound()
         attackers.push_back(attacker);
     }
 
-    mDeckCards->deal(mPlayersCards, MAX_CARDS);
+    mDeckCards->deal(mPlayersCards, MAX_PLAYER_CARDS);
 
     Round(attackers, defender, mPlayers, mGameObservers, *mDeckCards, mPlayersCards).play();
 
@@ -122,15 +122,18 @@ bool Engine::gameEnded() const
 {
     // check no game cards left
     // check that less than one player have cards
-    unsigned int playersWithCards = 0;
-    if (mDeckCards->empty()) {
-        for(std::map<PlayerId*, CardSet>::const_iterator it = mPlayersCards.begin(); it != mPlayersCards.end(); ++it) {
-            if(!it->second.empty()) {
-                playersWithCards++;
-            }
-        }
 
+    if (!mDeckCards->empty()) {
+        return false;
     }
+
+    unsigned int playersWithCards = 0;
+    for(std::map<PlayerId*, CardSet>::const_iterator it = mPlayersCards.begin(); it != mPlayersCards.end(); ++it) {
+        if(!it->second.empty()) {
+            playersWithCards++;
+        }
+    }
+
     return !playersWithCards;
 }
 

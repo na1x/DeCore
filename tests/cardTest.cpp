@@ -1,5 +1,3 @@
-#include <cstdio>
-
 #include "cardTest.h"
 #include "cardSet.h"
 #include "card.h"
@@ -27,14 +25,14 @@ void CardTest::testGenerate()
         RANK_KING,
         RANK_ACE,
     };
-    unsigned int ranksSize = sizeof(ranks);
+    unsigned int ranksSize = sizeof(ranks) / sizeof(Rank);
     Suit suits[] = {
         SUIT_SPADES,
         SUIT_HEARTS,
         SUIT_DIAMONDS,
         SUIT_CLUBS,
     };
-    unsigned int suitsSize = sizeof(suits);
+    unsigned int suitsSize = sizeof(suits) / sizeof(Suit);
 
     set.generate(ranks, ranksSize, suits, suitsSize);
 
@@ -80,18 +78,15 @@ void CardTest::testShuffle()
         RANK_KING,
         RANK_ACE,
     };
-    unsigned int ranksSize = sizeof(ranks);
+
     Suit suits[] = {
         SUIT_SPADES,
         SUIT_HEARTS,
         SUIT_DIAMONDS,
         SUIT_CLUBS,
     };
-    unsigned int suitsSize = sizeof(suits);
 
-    set.generate(ranks, ranksSize, suits, suitsSize);
-
-    CPPUNIT_ASSERT(ranksSize * suitsSize == set.size());
+    set.generate(ranks, sizeof(ranks) / sizeof(Rank), suits, sizeof(suits) / sizeof(Suit));
 
     CardSet original(set);
 
@@ -121,4 +116,121 @@ void CardTest::testGet()
     CPPUNIT_ASSERT(1 == set.size());
     CPPUNIT_ASSERT(set.get(0));
     CPPUNIT_ASSERT(!set.get(1));
+}
+
+void CardTest::testGetByRank()
+{
+    using namespace decore;
+
+    Rank ranks[] = {
+        RANK_6,
+        RANK_7,
+        RANK_8,
+        RANK_9,
+        RANK_10,
+        RANK_JACK,
+        RANK_QUEEN,
+        RANK_KING,
+        RANK_ACE,
+    };
+
+    Suit suits[] = {
+        SUIT_SPADES,
+        SUIT_DIAMONDS,
+        SUIT_CLUBS,
+    };
+
+    CardSet set;
+
+    set.generate(ranks, sizeof(ranks) / sizeof(Rank), suits, sizeof(suits) / sizeof(Suit));
+
+    CardSet result;
+
+    set.getCards(RANK_6, result);
+
+    // three suits
+    CPPUNIT_ASSERT(3 == result.size());
+
+    set.getCards(RANK_7, result);
+
+    // yet more three suits - cards appended
+    CPPUNIT_ASSERT(6 == result.size());
+}
+
+void CardTest::testGetBySuit()
+{
+    using namespace decore;
+
+    Rank ranks[] = {
+        RANK_6,
+        RANK_7,
+        RANK_8,
+        RANK_9,
+        RANK_10,
+    };
+
+    Suit suits[] = {
+        SUIT_SPADES,
+        SUIT_DIAMONDS,
+        SUIT_CLUBS,
+    };
+
+    CardSet set;
+
+    set.generate(ranks, sizeof(ranks) / sizeof(Rank), suits, sizeof(suits) / sizeof(Suit));
+
+    CardSet result;
+
+    set.getCards(SUIT_SPADES, result);
+
+    // five cards for each suits
+    CPPUNIT_ASSERT(5 == result.size());
+
+    CPPUNIT_ASSERT(result.get(0)->suit() == SUIT_SPADES);
+
+    set.getCards(SUIT_DIAMONDS, result);
+
+    // yet more five cards
+    CPPUNIT_ASSERT(10 == result.size());
+
+    CPPUNIT_ASSERT(result.get(result.size() - 1)->suit() == SUIT_DIAMONDS);
+}
+
+void CardTest::testIntersection()
+{
+    using namespace decore;
+
+    Rank ranks[] = {
+        RANK_6,
+        RANK_7,
+        RANK_8,
+        RANK_9,
+        RANK_10,
+        RANK_JACK,
+        RANK_QUEEN,
+        RANK_KING,
+        RANK_ACE,
+    };
+
+    Suit suits0[] = {
+        SUIT_SPADES,
+    };
+
+    CardSet set0;
+    set0.generate(ranks, sizeof(ranks) / sizeof(Rank), suits0, sizeof(suits0) / sizeof(Suit));
+
+    Suit suits1[] = {
+        SUIT_HEARTS,
+    };
+
+    CardSet set1;
+    set1.generate(ranks, sizeof(ranks) / sizeof(Rank), suits1, sizeof(suits1) / sizeof(Suit));
+
+    CardSet result0;
+    CardSet result1;
+
+    set0.intersect(set1, result0);
+    set1.intersect(set0, result1);
+
+    CPPUNIT_ASSERT(result0.size() == result1.size());
 }

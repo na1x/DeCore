@@ -93,4 +93,72 @@ bool CardSet::operator ==(const CardSet &other) const
     return mCards == other.mCards;
 }
 
+void CardSet::getCards(const Rank &rank, CardSet &cards) const
+{
+    class RankFilter : public Condition
+    {
+        const Rank& mRank;
+    public:
+        RankFilter(const Rank &rank)
+            : mRank(rank)
+        {}
+
+        bool test(const Card& card) const
+        {
+            return card.rank() == mRank;
+        }
+    };
+
+    filter((RankFilter)rank, cards);
+}
+
+void CardSet::getCards(const Suit &suit, CardSet &cards) const
+{
+    class SuitFilter : public Condition
+    {
+        const Suit& mSuit;
+    public:
+        SuitFilter(const Suit& suit)
+            : mSuit(suit)
+        {}
+
+        bool test(const Card& card) const
+        {
+            return card.suit() == mSuit;
+        }
+    };
+
+    filter((SuitFilter)suit, cards);
+}
+
+void CardSet::intersect(const CardSet &with, CardSet &cards) const
+{
+    class Filter : public Condition
+    {
+        const Card& mCard;
+    public:
+        Filter(const Card& card)
+            : mCard(card)
+        {}
+
+        bool test(const Card& card) const
+        {
+            return card.suit() == mCard.suit() || card.rank() == mCard.rank();
+        }
+    };
+
+    for(std::vector<Card>::const_iterator it = mCards.begin(); it != mCards.end(); ++it) {
+        with.filter((Filter)*it, cards);
+    }
+}
+
+void CardSet::filter(const CardSet::Condition &condition, CardSet& cards) const
+{
+    for(std::vector<Card>::const_iterator it = mCards.begin(); it != mCards.end(); ++it) {
+        if (condition.test(*it)) {
+            cards.add(*it);
+        }
+    }
+}
+
 }

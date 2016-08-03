@@ -11,6 +11,9 @@ class CardTest : public CppUnit::TestFixture
     CPPUNIT_TEST(testAdd);
     CPPUNIT_TEST(testShuffle);
     CPPUNIT_TEST(testGet);
+    CPPUNIT_TEST(testGetByRank);
+    CPPUNIT_TEST(testGetBySuit);
+    CPPUNIT_TEST(testIntersection);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -20,6 +23,9 @@ public:
     void testAdd();
     void testShuffle();
     void testGet();
+    void testGetByRank();
+    void testGetBySuit();
+    void testIntersection();
 };
 
 #endif // CARDUTILSTEST_H

@@ -8,9 +8,13 @@ namespace decore {
 
 CardSet Rules::getAttackCards(const CardSet& tableCards, const CardSet& playerCards)
 {
-    // TODO: implement
-    (void)tableCards;
-    return playerCards;
+    if (tableCards.empty()) {
+        return playerCards;
+    }
+
+    CardSet result;
+    tableCards.intersect(playerCards, result);
+    return result;
 }
 
 CardSet Rules::getDefendCards(const Card &card, const CardSet &playerCards)

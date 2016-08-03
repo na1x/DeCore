@@ -25,14 +25,14 @@ class GameObserver;
  *
  * Main game flow is here.
  * Usage of the class:
- * - create instance
- * - add players (at least two players)
- * - add game observers (optional)
- * - set cards (mandatory)
- * - call playRound till it returns true
+ * - create instance - Engine()
+ * - add players (at least two players) - add()
+ * - add game observers (optional) - addGameObserver()
+ * - set cards (mandatory) - setCards()
+ * - call playRound till it returns true - playRound()
  *
  * The class is not intended to be "thread safe" and designed for single thread for the sake of simplicity.
- * All players and observers will be invoked "inside" Engine::playRound().
+ * All players and observers will be invoked from "inside" of playRound().
  */
 class Engine
 {
@@ -58,6 +58,8 @@ class Engine
     std::vector<GameObserver*> mGameObservers;
     /**
      * @brief Cards left in the deck.
+     *
+     * TODO: add separate class for deck and remove mTrumpSuit
      */
     CardSet* mDeckCards;
     /**
@@ -72,6 +74,7 @@ class Engine
      * @brief Trump suit
      *
      * Note: Contains junk by design if cards not set
+     * TODO: remove after mDeckCards refactoring
      */
     Suit mTrumpSuit;
 
