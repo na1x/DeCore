@@ -11,7 +11,7 @@ Round::Round(const std::vector<PlayerId*>& attackers,
              PlayerId*& defender,
              std::map<PlayerId*, Player*>& players,
              std::vector<GameObserver*>& gameObservers,
-             CardSet& deck,
+             Deck& deck,
              std::map<PlayerId*, CardSet>& playersCards)
     : mAttackers(attackers)
     , mDefender(defender)
@@ -33,20 +33,27 @@ void Round::play()
 
     const CardSet& set = mPlayersCards[currentAttacker];
 
-    CardSet attackCards = Rules::getAttackCards(mTableCards, set);
+    CardSet tableCards;
+    tableCards.addAll(mAttackCards);
+    tableCards.addAll(mDefendCards);
 
-    unsigned int attackIndex = mPlayers[currentAttacker]->attack(mDefender, attackCards);
+    CardSet attackCards = Rules::getAttackCards(tableCards, set);
 
-    // fix index
-    if (attackIndex >= attackCards.size()) {
-        attackIndex = 0;
+    Card attackCard = mPlayers[currentAttacker]->attack(mDefender, attackCards);
+
+    if(!attackCards.erase(attackCard)) {
+        // invalid card returned
+        if (attackCards.empty()) {
+            // very unexpected
+            return;
+        }
+        attackCard = *attackCards.begin();
     }
 
-    CardSet defendCards = Rules::getDefendCards(*attackCards.get(attackIndex), set);
+    CardSet defendCards = Rules::getDefendCards(attackCard, set);
 
-    unsigned int defendIndex = -1;
-
-    if(mPlayers[mDefender]->defend(currentAttacker, defendCards, defendIndex)) {
+    Card* defendCard = mPlayers[mDefender]->defend(currentAttacker, defendCards);
+    if(defendCard) {
 
     } else {
 

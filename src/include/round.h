@@ -5,6 +5,7 @@
 #include <map>
 
 #include "card.h"
+#include "deck.h"
 #include "cardSet.h"
 
 namespace decore {
@@ -19,8 +20,9 @@ class Round
     PlayerId* mDefender;
     std::map<PlayerId*, Player*>& mPlayers;
     std::vector<GameObserver*>& mGameObservers;
-    CardSet& mDeck;
-    CardSet mTableCards;
+    Deck& mDeck;
+    std::vector<Card> mAttackCards;
+    std::vector<Card> mDefendCards;
     std::map<PlayerId*, CardSet>& mPlayersCards;
 
 public:
@@ -28,7 +30,7 @@ public:
           PlayerId*& defender,
           std::map<PlayerId*, Player*>& players,
           std::vector<GameObserver*>& gameObservers,
-          CardSet& deck,
+          Deck& deck,
           std::map<PlayerId*, CardSet>& playersCards);
 
     /**

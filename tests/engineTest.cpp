@@ -10,6 +10,11 @@ class TestEngine: public decore::Engine {
 
 class TestPlayer: public decore::Player {
 
+    void idCreated(PlayerId*)
+    {
+
+    }
+
     void gameStarted(Suit &, const CardSet &)
     {
 
@@ -35,22 +40,22 @@ class TestPlayer: public decore::Player {
 
     }
 
-    unsigned int attack(PlayerId*, const CardSet&)
+    const Card& attack(PlayerId*, const CardSet& set)
     {
         // dont care
-        return 0;
+        return *set.begin();
     }
 
-    bool attack(PlayerId*, const CardSet&, unsigned int&)
+    const Card* pitch(PlayerId*, const CardSet&)
     {
         // dont care
-        return false;
+        return NULL;
     }
 
-    bool defend(PlayerId*, const CardSet&, unsigned int&)
+    Card* defend(PlayerId*, const CardSet&)
     {
         // dont care
-        return false;
+        return NULL;
     }
 
     void cardsUpdated(const CardSet&)

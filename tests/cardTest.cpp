@@ -1,6 +1,23 @@
 #include "cardTest.h"
 #include "cardSet.h"
 #include "card.h"
+#include "deck.h"
+
+#define ARRAY_SIZE(x) \
+    sizeof(x) / sizeof(x[0])
+#define GENERATE(x, y) \
+    generate(x, ARRAY_SIZE(x), y, ARRAY_SIZE(y));
+
+static decore::CardSet generate(const Rank *ranks, unsigned int ranksSize, const Suit *suits, unsigned int suitsSize)
+{
+    decore::CardSet res;
+    for(unsigned int suitIndex = 0; suitIndex < suitsSize; ++suitIndex) {
+        for(unsigned int rankIndex = 0; rankIndex < ranksSize; ++rankIndex) {
+            res.insert(decore::Card(suits[suitIndex], ranks[rankIndex]));
+        }
+    }
+    return res;
+}
 
 void CardTest::testCreate()
 {
@@ -12,7 +29,7 @@ void CardTest::testCreate()
 void CardTest::testGenerate()
 {
     using namespace decore;
-    CardSet set;
+    Deck deck;
 
     Rank ranks[] = {
         RANK_6,
@@ -25,47 +42,52 @@ void CardTest::testGenerate()
         RANK_KING,
         RANK_ACE,
     };
-    unsigned int ranksSize = sizeof(ranks) / sizeof(Rank);
+    unsigned int ranksSize = ARRAY_SIZE(ranks);
     Suit suits[] = {
         SUIT_SPADES,
         SUIT_HEARTS,
         SUIT_DIAMONDS,
         SUIT_CLUBS,
     };
-    unsigned int suitsSize = sizeof(suits) / sizeof(Suit);
+    unsigned int suitsSize = ARRAY_SIZE(suits);
 
-    set.generate(ranks, ranksSize, suits, suitsSize);
+    deck.generate(ranks, ranksSize, suits, suitsSize);
 
-    CPPUNIT_ASSERT(ranksSize * suitsSize == set.size());
+    CPPUNIT_ASSERT(ranksSize * suitsSize == deck.size());
 }
 
-void CardTest::testAdd()
+void CardTest::testSetAddAll()
 {
     using namespace decore;
-    CardSet set;
-    Card cardToAdd = Card(SUIT_CLUBS, RANK_6);
-    Card notAddedCard = Card(SUIT_CLUBS, RANK_7);
-    set.add(cardToAdd);
-    CPPUNIT_ASSERT(!set.empty());
-    CPPUNIT_ASSERT(1 == set.size());
+    std::vector<Card> cards;
+    cards.push_back(Card(SUIT_CLUBS, RANK_6));
+    cards.push_back(Card(SUIT_CLUBS, RANK_7));
+    cards.push_back(Card(SUIT_CLUBS, RANK_8));
+    cards.push_back(Card(SUIT_CLUBS, RANK_9));
 
-    std::map<PlayerId *, CardSet> cards;
-    PlayerId id;
-    cards[&id] = CardSet();
+    CardSet set0;
+    // add card and vector which includes the card
+    CPPUNIT_ASSERT(set0.insert(Card(SUIT_CLUBS, RANK_6)).second);
+    CPPUNIT_ASSERT(!set0.addAll(cards));
 
-    CPPUNIT_ASSERT(set.deal(cards, 6));
+    CardSet set1;
+    // add same vector twice
+    CPPUNIT_ASSERT(set1.addAll(cards));
+    CPPUNIT_ASSERT(set1.size() == cards.size());
+    CPPUNIT_ASSERT(!set1.addAll(cards));
 
-    const CardSet& dealCards = cards[&id];
-    CPPUNIT_ASSERT(1 == dealCards.size());
-    CPPUNIT_ASSERT(set.empty());
-    CPPUNIT_ASSERT(*dealCards.get(0) == cardToAdd);
-    CPPUNIT_ASSERT(!(*dealCards.get(0) == notAddedCard));
+    // add vector with not unique cards
+    cards.push_back(Card(SUIT_CLUBS, RANK_9));
+    cards.push_back(Card(SUIT_CLUBS, RANK_9));
+    CardSet set2;
+    CPPUNIT_ASSERT(!set2.addAll(cards));
+
 }
 
 void CardTest::testShuffle()
 {
     using namespace decore;
-    CardSet set;
+    Deck deck;
 
     Rank ranks[] = {
         RANK_6,
@@ -86,22 +108,22 @@ void CardTest::testShuffle()
         SUIT_CLUBS,
     };
 
-    set.generate(ranks, sizeof(ranks) / sizeof(Rank), suits, sizeof(suits) / sizeof(Suit));
+    deck.generate(ranks, ARRAY_SIZE(ranks), suits, ARRAY_SIZE(suits));
 
-    CardSet original(set);
+    Deck original(deck);
 
-    unsigned int notShuffled = set.shuffle();
+    unsigned int notShuffled = deck.shuffle();
 
     unsigned int notShuffledActual = 0;
 
-    for(unsigned int i = 0, end = set.size(); i < end; ++i) {
-        if (*original.get(i) == *set.get(i)) {
+    for(unsigned int i = 0, end = deck.size(); i < end; ++i) {
+        if (original[i] == deck[i]) {
             ++notShuffledActual;
         }
     }
 
-    CPPUNIT_ASSERT(original.size() == set.size());
-    CPPUNIT_ASSERT(!(original == set));
+    CPPUNIT_ASSERT(original.size() == deck.size());
+    CPPUNIT_ASSERT(!(original == deck));
     char buf[1024];
     snprintf(buf, sizeof(buf), "notShuffledActual %u, notShuffled %u", notShuffledActual, notShuffled);
     CPPUNIT_ASSERT_MESSAGE(buf, notShuffledActual == notShuffled);
@@ -111,11 +133,12 @@ void CardTest::testGet()
 {
     using namespace decore;
     CardSet set;
-    set.add(Card(SUIT_CLUBS, RANK_6));
+    Card card(SUIT_CLUBS, RANK_6);
+    set.insert(card);
     CPPUNIT_ASSERT(!set.empty());
     CPPUNIT_ASSERT(1 == set.size());
-    CPPUNIT_ASSERT(set.get(0));
-    CPPUNIT_ASSERT(!set.get(1));
+    CPPUNIT_ASSERT(1 == set.erase(card));
+    CPPUNIT_ASSERT(!set.erase(card));
 }
 
 void CardTest::testGetByRank()
@@ -140,9 +163,7 @@ void CardTest::testGetByRank()
         SUIT_CLUBS,
     };
 
-    CardSet set;
-
-    set.generate(ranks, sizeof(ranks) / sizeof(Rank), suits, sizeof(suits) / sizeof(Suit));
+    CardSet set = GENERATE(ranks, suits);
 
     CardSet result;
 
@@ -175,9 +196,7 @@ void CardTest::testGetBySuit()
         SUIT_CLUBS,
     };
 
-    CardSet set;
-
-    set.generate(ranks, sizeof(ranks) / sizeof(Rank), suits, sizeof(suits) / sizeof(Suit));
+    CardSet set = GENERATE(ranks, suits);
 
     CardSet result;
 
@@ -186,14 +205,13 @@ void CardTest::testGetBySuit()
     // five cards for each suits
     CPPUNIT_ASSERT(5 == result.size());
 
-    CPPUNIT_ASSERT(result.get(0)->suit() == SUIT_SPADES);
+    CPPUNIT_ASSERT(result.begin()->suit() == SUIT_SPADES);
 
     set.getCards(SUIT_DIAMONDS, result);
 
-    // yet more five cards
+    // yet more five cards and one is removed
     CPPUNIT_ASSERT(10 == result.size());
-
-    CPPUNIT_ASSERT(result.get(result.size() - 1)->suit() == SUIT_DIAMONDS);
+    CPPUNIT_ASSERT((--result.end())->suit() == SUIT_DIAMONDS);
 }
 
 void CardTest::testIntersection()
@@ -216,15 +234,13 @@ void CardTest::testIntersection()
         SUIT_SPADES,
     };
 
-    CardSet set0;
-    set0.generate(ranks, sizeof(ranks) / sizeof(Rank), suits0, sizeof(suits0) / sizeof(Suit));
+    CardSet set0 = GENERATE(ranks, suits0);
 
     Suit suits1[] = {
         SUIT_HEARTS,
     };
 
-    CardSet set1;
-    set1.generate(ranks, sizeof(ranks) / sizeof(Rank), suits1, sizeof(suits1) / sizeof(Suit));
+    CardSet set1 = GENERATE(ranks, suits1);
 
     CardSet result0;
     CardSet result1;

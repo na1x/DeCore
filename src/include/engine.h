@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <vector>
 
 #include "playerId.h"
 #include "cardSet.h"
@@ -19,6 +20,7 @@ namespace decore
 
 class Player;
 class GameObserver;
+class Deck;
 
 /**
  * @brief The game engine class
@@ -28,7 +30,7 @@ class GameObserver;
  * - create instance - Engine()
  * - add players (at least two players) - add()
  * - add game observers (optional) - addGameObserver()
- * - set cards (mandatory) - setCards()
+ * - set deck (mandatory) - setDeck()
  * - call playRound till it returns true - playRound()
  *
  * The class is not intended to be "thread safe" and designed for single thread for the sake of simplicity.
@@ -59,9 +61,8 @@ class Engine
     /**
      * @brief Cards left in the deck.
      *
-     * TODO: add separate class for deck and remove mTrumpSuit
      */
-    CardSet* mDeckCards;
+    Deck* mDeck;
     /**
      * @brief Player id generation counter
      */
@@ -70,13 +71,6 @@ class Engine
      * @brief Attacker's player id
      */
     PlayerId* mCurrentPlayer;
-    /**
-     * @brief Trump suit
-     *
-     * Note: Contains junk by design if cards not set
-     * TODO: remove after mDeckCards refactoring
-     */
-    Suit mTrumpSuit;
 
 public:
     /**
@@ -112,7 +106,7 @@ public:
      * @param cardset cards for the game, typically full and shuffled deck
      * @return true if set, false in case of any errors
      */
-    bool setCards(const CardSet& cardset);
+    bool setDeck(const Deck& deck);
     /**
      * @brief Plays one round
      *

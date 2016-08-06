@@ -38,6 +38,14 @@ public:
      */
     bool operator == (const Card& other) const;
     /**
+     * @brief operator <
+     *
+     * Tests the card against other card
+     * @param other other card instance
+     * @return true if the cards equal
+     */
+    bool operator < (const Card& other) const;
+    /**
      * @brief Rank getter
      * @return rank of the card
      */

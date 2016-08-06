@@ -4,6 +4,7 @@
 #include "round.h"
 #include "player.h"
 #include "rules.h"
+#include "deck.h"
 
 namespace decore {
 
@@ -20,7 +21,7 @@ public:
 };
 
 Engine::Engine()
-    : mDeckCards(NULL)
+    : mDeck(NULL)
     , mPlayerIdCounter(0)
     , mCurrentPlayer(NULL)
 {
@@ -28,7 +29,7 @@ Engine::Engine()
 
 Engine::~Engine()
 {
-    delete mDeckCards;
+    delete mDeck;
     for(std::vector<PlayerId*>::iterator it = mGeneratedIds.begin(); it != mGeneratedIds.end(); ++it) {
         delete *it;
     }
@@ -36,7 +37,7 @@ Engine::~Engine()
 
 PlayerId *Engine::add(Player & player)
 {
-    if (mDeckCards) {
+    if (mDeck) {
         return NULL;
     }
 
@@ -50,17 +51,19 @@ PlayerId *Engine::add(Player & player)
     // add this player to game observers
     addGameObserver(player);
 
+    player.idCreated(id);
+
     return id;
 }
 
-bool Engine::setCards(const CardSet &cardSet)
+bool Engine::setDeck(const Deck &deck)
 {
-    if (mDeckCards) {
+    if (mDeck) {
         // already set
         return false;
     }
 
-    if (cardSet.empty()) {
+    if (deck.empty()) {
         // nothing to do with empty card set
         return false;
     }
@@ -70,16 +73,14 @@ bool Engine::setCards(const CardSet &cardSet)
         return false;
     }
 
-    mTrumpSuit = cardSet.get(cardSet.size() - 1)->suit();
-
-    mDeckCards = new CardSet(cardSet);
+    mDeck = new Deck(deck);
 
     return true;
 }
 
 bool Engine::playRound()
 {
-    if (!mDeckCards) {
+    if (!mDeck) {
         // no cards set
         return true;
     }
@@ -106,9 +107,9 @@ bool Engine::playRound()
         attackers.push_back(attacker);
     }
 
-    mDeckCards->deal(mPlayersCards, MAX_PLAYER_CARDS);
+    mDeck->deal(mPlayersCards, MAX_PLAYER_CARDS);
 
-    Round(attackers, defender, mPlayers, mGameObservers, *mDeckCards, mPlayersCards).play();
+    Round(attackers, defender, mPlayers, mGameObservers, *mDeck, mPlayersCards).play();
 
     return !gameEnded();
 }
@@ -123,7 +124,7 @@ bool Engine::gameEnded() const
     // check no game cards left
     // check that less than one player have cards
 
-    if (!mDeckCards->empty()) {
+    if (!mDeck->empty()) {
         return false;
     }
 
