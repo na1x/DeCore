@@ -8,9 +8,6 @@
 
 namespace decore {
 
-const unsigned int MAX_PLAYER_CARDS = 6;
-
-
 class PlayerIdImplementation: public PlayerId
 {
     const int mId;
@@ -106,8 +103,6 @@ bool Engine::playRound()
     while((attacker = Rules::pickNext(mGeneratedIds, attacker)) != mCurrentPlayer) {
         attackers.push_back(attacker);
     }
-
-    mDeck->deal(mPlayersCards, MAX_PLAYER_CARDS);
 
     Round(attackers, defender, mPlayers, mGameObservers, *mDeck, mPlayersCards).play();
 

@@ -15,6 +15,8 @@ class PlayerId;
  */
 class Deck : public std::vector<Card>
 {
+    Suit mTrumpSuit;
+
 public:
     /**
      * @brief Generates card set
@@ -38,6 +40,11 @@ public:
      * @return amount of not shuffled cards
      */
     unsigned int shuffle();
+    /**
+     * @brief Returns trump suit
+     * @return trump suit
+     */
+    const Suit& trumpSuit() const;
 };
 
 }

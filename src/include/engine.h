@@ -103,7 +103,7 @@ public:
      *
      * After players added the game is to be initiated with card set. Suit of the last card in the card set will be trump for the game.
      *
-     * @param cardset cards for the game, typically full and shuffled deck
+     * @param deck cards for the game, typically full and shuffled deck
      * @return true if set, false in case of any errors
      */
     bool setDeck(const Deck& deck);

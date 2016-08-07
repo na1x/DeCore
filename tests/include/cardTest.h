@@ -13,7 +13,6 @@ class CardTest : public CppUnit::TestFixture
     CPPUNIT_TEST(testGet);
     CPPUNIT_TEST(testGetByRank);
     CPPUNIT_TEST(testGetBySuit);
-    CPPUNIT_TEST(testIntersection);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -25,9 +24,7 @@ public:
     void testGet();
     void testGetByRank();
     void testGetBySuit();
-    void testIntersection();
 
-private:
 };
 
 #endif // CARDUTILSTEST_H

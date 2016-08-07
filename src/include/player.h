@@ -49,11 +49,12 @@ public:
      * @brief The player defends against atacker with playerId
      *
      * The move is optinal: to pick up the cards return NULL - this means that defend is failed.
+     * Note: the method is invoked even if cardSet is empty - returned value ignored in the case
      * @param playerId attacker's player id
      * @param cardSet available cards
      * @return Card from the `cardSet` if index updated and defend performed, NULL means that defend is failed and table cards to be picked up by this player
      */
-    virtual Card* defend(PlayerId* playerId, const CardSet& cardSet) = 0;
+    virtual const Card* defend(PlayerId* playerId, const CardSet& cardSet) = 0;
     /**
      * @brief Notification from engine about updated cards
      * @param cardSet new cards

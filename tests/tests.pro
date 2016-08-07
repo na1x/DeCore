@@ -21,11 +21,13 @@ LIBS += -lcppunit
 SOURCES += \
     main.cpp \
     cardTest.cpp \
-    engineTest.cpp
+    engineTest.cpp \
+    rulesTest.cpp
 
 HEADERS += \
     include/cardTest.h \
-    include/engineTest.h
+    include/engineTest.h \
+    include/rulesTest.h
 
 INCLUDEPATH += $$PWD/../src/include
 DEPENDPATH += $$PWD/../src/include

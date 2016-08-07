@@ -45,13 +45,6 @@ public:
      * @param cards destination card set
      */
     void getCards(const Suit& suit, CardSet& cards) const;
-    /**
-     * @brief Appends cards from `with` to `cards` only if in this set exists card with same suit OR rank
-     *
-     * @param with card set to "intersect" with
-     * @param cards destination card set
-     */
-    void intersect(const CardSet& with, CardSet& cards) const;
 };
 
 }

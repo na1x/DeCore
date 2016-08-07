@@ -24,6 +24,9 @@ bool CardSet::addAll(const std::vector<Card> &cards)
     return true;
 }
 
+/**
+ * @brief std::for_each function
+ */
 class RankFilter
 {
     const Rank& mRank;
@@ -47,6 +50,9 @@ void CardSet::getCards(const Rank &rank, CardSet &cards) const
     std::for_each(begin(), end(), RankFilter(rank, cards));
 }
 
+/**
+ * @brief std::for_each function
+ */
 class SuitFilter
 {
     const Suit& mSuit;
@@ -68,31 +74,6 @@ public:
 void CardSet::getCards(const Suit &suit, CardSet &cards) const
 {
     std::for_each(begin(), end(), SuitFilter(suit, cards));
-}
-
-class CardFilter
-{
-    const Card& mCard;
-    CardSet& mCards;
-public:
-    CardFilter(const Card& card, CardSet& cards)
-        : mCard(card)
-        , mCards(cards)
-    {}
-
-    void operator() (const Card& card)
-    {
-        if(card.suit() == mCard.suit() || card.rank() == mCard.rank()) {
-            mCards.insert(card);
-        }
-    }
-};
-
-void CardSet::intersect(const CardSet &with, CardSet &cards) const
-{
-    for(std::set<Card>::const_iterator it = begin(); it != end(); ++it) {
-        std::for_each(with.begin(), with.end(), CardFilter(*it, cards));
-    }
 }
 
 }

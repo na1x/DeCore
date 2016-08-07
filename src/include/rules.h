@@ -31,9 +31,10 @@ public:
      * @brief Returns possible cards for defend move
      * @param card card to beat
      * @param playerCards defender's cards
+     * @param trumpSuit trump suit
      * @return possible cards
      */
-    static CardSet getDefendCards(const Card& card, const CardSet& playerCards);
+    static CardSet getDefendCards(const Card& card, const CardSet& playerCards, const Suit& trumpSuit);
     /**
      * @brief Returns next player in the player queue after the player
      * @param playersList list of the player

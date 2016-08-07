@@ -32,7 +32,3 @@ HEADERS += \
     src/include/suit.h \
     src/include/rules.h \
     src/include/deck.h
-unix {
-    target.path = /usr/lib
-    INSTALLS += target
-}

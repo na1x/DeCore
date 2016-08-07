@@ -13,14 +13,17 @@ CardSet Rules::getAttackCards(const CardSet& tableCards, const CardSet& playerCa
     }
 
     CardSet result;
-    tableCards.intersect(playerCards, result);
+    for(CardSet::iterator it = tableCards.begin(); it != tableCards.end(); ++it) {
+        playerCards.getCards(it->rank(), result);
+    }
     return result;
 }
 
-CardSet Rules::getDefendCards(const Card &card, const CardSet &playerCards)
+CardSet Rules::getDefendCards(const Card &card, const CardSet &playerCards, const Suit &trumpSuit)
 {
     // TODO: implement
     (void)card;
+    (void)trumpSuit;
     return playerCards;
 }
 

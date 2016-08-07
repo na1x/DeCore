@@ -2,10 +2,11 @@
 
 #include "round.h"
 #include "rules.h"
-#include "cardSet.h"
 #include "player.h"
 
 namespace decore {
+
+const unsigned int MAX_PLAYER_CARDS = 6;
 
 Round::Round(const std::vector<PlayerId*>& attackers,
              PlayerId*& defender,
@@ -29,34 +30,51 @@ void Round::play()
     // 3. till round complete
     // 4. check if game ended
 
-    PlayerId* currentAttacker = mAttackers.at(0);
+    mDeck.deal(mPlayersCards, MAX_PLAYER_CARDS);
 
-    const CardSet& set = mPlayersCards[currentAttacker];
+    PlayerId* currentAttackerId = mAttackers[0];
+
+    mAttackers.at(0);
 
     CardSet tableCards;
-    tableCards.addAll(mAttackCards);
-    tableCards.addAll(mDefendCards);
 
-    CardSet attackCards = Rules::getAttackCards(tableCards, set);
+    CardSet attackCards;
 
-    Card attackCard = mPlayers[currentAttacker]->attack(mDefender, attackCards);
+    Player& defender = *mPlayers[mDefender];
 
-    if(!attackCards.erase(attackCard)) {
-        // invalid card returned
-        if (attackCards.empty()) {
-            // very unexpected
-            return;
+    while (!(attackCards = Rules::getAttackCards(tableCards, mPlayersCards[currentAttackerId])).empty()) {
+
+        Player& currentAttacker = *mPlayers[currentAttackerId];
+        Card attackCard = currentAttacker.attack(mDefender, attackCards);
+
+        if(!attackCards.erase(attackCard)) {
+            // invalid card returned
+            if (attackCards.empty()) {
+                // very unexpected
+                return;
+            }
+            // take any card
+            attackCard = *attackCards.begin();
         }
-        attackCard = *attackCards.begin();
-    }
 
-    CardSet defendCards = Rules::getDefendCards(attackCard, set);
+        mAttackCards.push_back(attackCard);
 
-    Card* defendCard = mPlayers[mDefender]->defend(currentAttacker, defendCards);
-    if(defendCard) {
+        CardSet defendCards = Rules::getDefendCards(attackCard, mPlayersCards[mDefender], mDeck.trumpSuit());
 
-    } else {
+        const Card* defendCard = defender.defend(currentAttackerId, defendCards);
 
+        if(defendCards.empty() || !defendCard || defendCards.find(*defendCard) == defendCards.end()) {
+            mPlayersCards[mDefender].addAll(mAttackCards);
+            mPlayersCards[mDefender].addAll(mDefendCards);
+            return;
+        } else {
+            mDefendCards.push_back(*defendCard);
+        }
+
+        tableCards.insert(attackCard);
+        tableCards.insert(*defendCard);
+
+        currentAttackerId = Rules::pickNext(mAttackers, currentAttackerId);
     }
 }
 

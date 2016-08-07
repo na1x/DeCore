@@ -30,6 +30,9 @@ void Deck::generate(const Rank *ranks, unsigned int ranksSize, const Suit *suits
             push_back(Card(suits[suitIndex], ranks[rankIndex]));
         }
     }
+    if (!empty()) {
+        mTrumpSuit = (end() - 1)->suit();
+    }
 }
 
 unsigned int Deck::shuffle()
@@ -43,6 +46,10 @@ unsigned int Deck::shuffle()
         push_back(*cards.erase(cards.begin() + index));
     }
 
+    if (!empty()) {
+        mTrumpSuit = (end() - 1)->suit();
+    }
+
     unsigned int notShuffledCards = 0;
 
     for(unsigned int i = 0, end = size(); i < end; ++i) {
@@ -51,6 +58,11 @@ unsigned int Deck::shuffle()
         }
     }
     return notShuffledCards;
+}
+
+const Suit& Deck::trumpSuit() const
+{
+    return mTrumpSuit;
 }
 
 }
