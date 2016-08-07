@@ -1,10 +1,25 @@
 #include <algorithm>
 
-
 #include "rules.h"
 #include "cardSet.h"
 
 namespace decore {
+
+class AttackCardFilter
+{
+    const CardSet& mPlayerCards;
+    CardSet& mResult;
+public:
+    AttackCardFilter(const CardSet& playerCards, CardSet& result)
+        : mPlayerCards(playerCards)
+        , mResult(result)
+    {}
+
+    void operator()(const Card& tableCard)
+    {
+        mPlayerCards.getCards(tableCard.rank(), mResult);
+    }
+};
 
 CardSet Rules::getAttackCards(const CardSet& tableCards, const CardSet& playerCards)
 {
@@ -13,18 +28,42 @@ CardSet Rules::getAttackCards(const CardSet& tableCards, const CardSet& playerCa
     }
 
     CardSet result;
-    for(CardSet::iterator it = tableCards.begin(); it != tableCards.end(); ++it) {
-        playerCards.getCards(it->rank(), result);
-    }
+    std::for_each(tableCards.begin(), tableCards.end(), AttackCardFilter(playerCards, result));
     return result;
 }
 
+class DefendCardFilter
+{
+    const Card& mCardToBeat;
+    const Suit& mTrump;
+    CardSet& mResult;
+
+public:
+    DefendCardFilter(const Card& cardToBeat, const Suit& trump, CardSet& result)
+        : mCardToBeat(cardToBeat)
+        , mTrump(trump)
+        , mResult(result)
+    {}
+
+    void operator()(const Card& playerCard)
+    {
+        if (mCardToBeat.suit() == playerCard.suit()) {
+            // if suits are equal - take highest card
+            if (mCardToBeat.rank() < playerCard.rank()) {
+                mResult.insert(playerCard);
+            }
+        } else if (playerCard.suit() == mTrump) {
+            // if player card is a trump - take it
+            mResult.insert(playerCard);
+        }
+    }
+};
+
 CardSet Rules::getDefendCards(const Card &card, const CardSet &playerCards, const Suit &trumpSuit)
 {
-    // TODO: implement
-    (void)card;
-    (void)trumpSuit;
-    return playerCards;
+    CardSet result;
+    std::for_each(playerCards.begin(), playerCards.end(), DefendCardFilter(card, trumpSuit, result));
+    return result;
 }
 
 PlayerId *Rules::pickNext(const std::vector<PlayerId*>& playersList, PlayerId* after)

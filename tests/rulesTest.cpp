@@ -69,3 +69,49 @@ void RulesTest::testAttackCards()
     CPPUNIT_ASSERT(attackCards.find(Card(SUIT_CLUBS, RANK_9)) != attackCards.end());
 }
 
+void RulesTest::testDefendCards()
+{
+    using namespace decore;
+
+    Suit trump = SUIT_SPADES;
+
+    CardSet playerCards;
+
+    playerCards.insert(Card(SUIT_CLUBS, RANK_7));
+    playerCards.insert(Card(SUIT_DIAMONDS, RANK_7));
+    playerCards.insert(Card(SUIT_HEARTS, RANK_7));
+
+    CardSet defendCards = Rules::getDefendCards(Card(SUIT_CLUBS, RANK_6), playerCards, trump);
+    CPPUNIT_ASSERT(1 == defendCards.size());
+    CPPUNIT_ASSERT(*defendCards.begin() == Card(SUIT_CLUBS, RANK_7));
+
+    defendCards = Rules::getDefendCards(Card(SUIT_DIAMONDS, RANK_6), playerCards, trump);
+    CPPUNIT_ASSERT(1 == defendCards.size());
+    CPPUNIT_ASSERT(*defendCards.begin() == Card(SUIT_DIAMONDS, RANK_7));
+
+    defendCards = Rules::getDefendCards(Card(SUIT_HEARTS, RANK_6), playerCards, trump);
+    CPPUNIT_ASSERT(1 == defendCards.size());
+    CPPUNIT_ASSERT(*defendCards.begin() == Card(SUIT_HEARTS, RANK_7));
+
+    defendCards = Rules::getDefendCards(Card(SUIT_HEARTS, RANK_8), playerCards, trump);
+    CPPUNIT_ASSERT(defendCards.empty());
+
+    defendCards = Rules::getDefendCards(Card(SUIT_SPADES, RANK_6), playerCards, trump);
+    CPPUNIT_ASSERT(defendCards.empty());
+
+    // add trump to the player
+    playerCards.insert(Card(SUIT_SPADES, RANK_7));
+
+    defendCards = Rules::getDefendCards(Card(SUIT_CLUBS, RANK_6), playerCards, trump);
+    CPPUNIT_ASSERT(2 == defendCards.size());
+    CPPUNIT_ASSERT(defendCards.find(Card(SUIT_CLUBS, RANK_7)) != defendCards.end());
+    CPPUNIT_ASSERT(defendCards.find(Card(SUIT_SPADES, RANK_7)) != defendCards.end());
+
+    defendCards = Rules::getDefendCards(Card(SUIT_CLUBS, RANK_8), playerCards, trump);
+    CPPUNIT_ASSERT(1 == defendCards.size());
+    CPPUNIT_ASSERT(defendCards.find(Card(SUIT_SPADES, RANK_7)) != defendCards.end());
+
+    defendCards = Rules::getDefendCards(Card(SUIT_SPADES, RANK_8), playerCards, trump);
+    CPPUNIT_ASSERT(defendCards.empty());
+}
+
