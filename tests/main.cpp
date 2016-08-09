@@ -5,11 +5,13 @@
 #include "cardTest.h"
 #include "rulesTest.h"
 #include "engineTest.h"
+#include "gameTest.h"
 
 // tests to execute declaration
 CPPUNIT_TEST_SUITE_REGISTRATION(CardTest);
 CPPUNIT_TEST_SUITE_REGISTRATION(RulesTest);
 CPPUNIT_TEST_SUITE_REGISTRATION(EngineTest);
+CPPUNIT_TEST_SUITE_REGISTRATION(GameTest);
 
 int main(int, char **)
 {

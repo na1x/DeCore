@@ -16,27 +16,30 @@ class Player;
 
 class Round
 {
-    std::vector<PlayerId*> mAttackers;
-    PlayerId* mDefender;
-    std::map<PlayerId*, Player*>& mPlayers;
+    std::vector<const PlayerId*> mAttackers;
+    const PlayerId* mDefender;
+    std::map<const PlayerId*, Player*>& mPlayers;
     std::vector<GameObserver*>& mGameObservers;
     Deck& mDeck;
     std::vector<Card> mAttackCards;
     std::vector<Card> mDefendCards;
-    std::map<PlayerId*, CardSet>& mPlayersCards;
+    std::map<const PlayerId*, CardSet>& mPlayersCards;
 
 public:
-    Round(const std::vector<PlayerId*>& attackers,
-          PlayerId*& defender,
-          std::map<PlayerId*, Player*>& players,
+    Round(const std::vector<const PlayerId*>& attackers,
+          const PlayerId*& defender,
+          std::map<const PlayerId*, Player*>& players,
           std::vector<GameObserver*>& gameObservers,
           Deck& deck,
-          std::map<PlayerId*, CardSet>& playersCards);
+          std::map<const PlayerId*, CardSet>& playersCards);
 
     /**
      * @brief Plays current round
      */
     void play();
+
+private:
+    void dealCards();
 };
 
 }

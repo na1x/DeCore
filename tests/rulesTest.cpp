@@ -2,6 +2,7 @@
 #include "playerId.h"
 #include "rules.h"
 #include "cardSet.h"
+#include "deck.h"
 
 class Id : public decore::PlayerId
 {
@@ -11,7 +12,7 @@ class Id : public decore::PlayerId
 void RulesTest::testPickNext()
 {
     using namespace decore;
-    std::vector<PlayerId*> playerIds;
+    std::vector<const PlayerId*> playerIds;
 
     const unsigned int IDS = 5;
 
@@ -24,8 +25,8 @@ void RulesTest::testPickNext()
     CPPUNIT_ASSERT(!Rules::pickNext(playerIds, NULL));
 
     // check pickNext
-    for(std::vector<PlayerId*>::iterator it = playerIds.begin(); it != playerIds.end(); ++it) {
-        std::vector<PlayerId*>::iterator next = it + 1;
+    for(std::vector<const PlayerId*>::iterator it = playerIds.begin(); it != playerIds.end(); ++it) {
+        std::vector<const PlayerId*>::iterator next = it + 1;
         if (next == playerIds.end()) {
             next = playerIds.begin();
         }
@@ -33,7 +34,7 @@ void RulesTest::testPickNext()
     }
 
     // cleanup players
-    for(std::vector<PlayerId*>::iterator it = playerIds.begin(); it != playerIds.end(); ++it) {
+    for(std::vector<const PlayerId*>::iterator it = playerIds.begin(); it != playerIds.end(); ++it) {
         delete *it;
     }
 }
@@ -113,5 +114,42 @@ void RulesTest::testDefendCards()
 
     defendCards = Rules::getDefendCards(Card(SUIT_SPADES, RANK_8), playerCards, trump);
     CPPUNIT_ASSERT(defendCards.empty());
+}
+
+void RulesTest::testDeal()
+{
+    using namespace decore;
+
+    Deck deck;
+
+    deck.push_back(Card(SUIT_CLUBS, RANK_6));
+    deck.push_back(Card(SUIT_CLUBS, RANK_7));
+    deck.push_back(Card(SUIT_CLUBS, RANK_8));
+    deck.push_back(Card(SUIT_CLUBS, RANK_9));
+    deck.push_back(Card(SUIT_CLUBS, RANK_10));
+
+    std::vector<CardSet*> cards;
+
+    CardSet c0;
+    CardSet c1;
+    CardSet c2;
+
+    cards.push_back(&c0);
+    cards.push_back(&c1);
+    cards.push_back(&c2);
+
+    CPPUNIT_ASSERT(Rules::deal(deck, cards));
+
+    CPPUNIT_ASSERT(2 == c0.size());
+    CPPUNIT_ASSERT(2 == c1.size());
+    CPPUNIT_ASSERT(1 == c2.size());
+
+    CPPUNIT_ASSERT(c0.find(Card(SUIT_CLUBS, RANK_6)) != c0.end());
+    CPPUNIT_ASSERT(c0.find(Card(SUIT_CLUBS, RANK_9)) != c0.end());
+
+    CPPUNIT_ASSERT(c1.find(Card(SUIT_CLUBS, RANK_7)) != c1.end());
+    CPPUNIT_ASSERT(c1.find(Card(SUIT_CLUBS, RANK_10)) != c1.end());
+
+    CPPUNIT_ASSERT(c2.find(Card(SUIT_CLUBS, RANK_8)) != c2.end());
 }
 

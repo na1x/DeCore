@@ -27,7 +27,7 @@ Engine::Engine()
 Engine::~Engine()
 {
     delete mDeck;
-    for(std::vector<PlayerId*>::iterator it = mGeneratedIds.begin(); it != mGeneratedIds.end(); ++it) {
+    for(std::vector<const PlayerId*>::iterator it = mGeneratedIds.begin(); it != mGeneratedIds.end(); ++it) {
         delete *it;
     }
 }
@@ -79,12 +79,12 @@ bool Engine::playRound()
 {
     if (!mDeck) {
         // no cards set
-        return true;
+        return false;
     }
 
     if (mGeneratedIds.size() < 2) {
         // too few players - at least two should be set
-        return true;
+        return false;
     }
 
     if (!mCurrentPlayer) {
@@ -92,14 +92,18 @@ bool Engine::playRound()
         mCurrentPlayer = mGeneratedIds[0];
     }
 
+    if (gameEnded()) {
+        return false;
+    }
+
     // prepare round data
-    std::vector<PlayerId*> attackers;
+    std::vector<const PlayerId*> attackers;
     // pick current player as first attacker
     attackers.push_back(mCurrentPlayer);
     // pick next player as defender
-    PlayerId* defender = Rules::pickNext(mGeneratedIds, mCurrentPlayer);
+    const PlayerId* defender = Rules::pickNext(mGeneratedIds, mCurrentPlayer);
     // gather rest players as additional attackers
-    PlayerId* attacker = defender;
+    const PlayerId* attacker = defender;
     while((attacker = Rules::pickNext(mGeneratedIds, attacker)) != mCurrentPlayer) {
         attackers.push_back(attacker);
     }
@@ -124,7 +128,7 @@ bool Engine::gameEnded() const
     }
 
     unsigned int playersWithCards = 0;
-    for(std::map<PlayerId*, CardSet>::const_iterator it = mPlayersCards.begin(); it != mPlayersCards.end(); ++it) {
+    for(std::map<const PlayerId*, CardSet>::const_iterator it = mPlayersCards.begin(); it != mPlayersCards.end(); ++it) {
         if(!it->second.empty()) {
             playersWithCards++;
         }

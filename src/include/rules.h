@@ -9,6 +9,7 @@ namespace decore {
 
 class CardSet;
 class PlayerId;
+class Deck;
 
 /**
  * @brief Game rules
@@ -41,7 +42,16 @@ public:
      * @param after defines player id
      * @return next player id
      */
-    static PlayerId* pickNext(const std::vector<PlayerId*>& playersList, PlayerId* after);
+    static const PlayerId *pickNext(const std::vector<const PlayerId *> &playersList, const PlayerId *after);
+    /**
+     * @brief Deals cards from the set to the players up to MAX_PLAYER_CARDS
+     *
+     * If any player already has maxCards then its card set won't be updated
+     * @param deck deck
+     * @param cards set of cards to update
+     * @return true if any card set is updated
+     */
+    static bool deal(Deck &deck, const std::vector<CardSet *> &cards);
 };
 
 }

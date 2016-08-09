@@ -2,8 +2,11 @@
 
 #include "rules.h"
 #include "cardSet.h"
+#include "deck.h"
 
 namespace decore {
+
+const unsigned int MAX_PLAYER_CARDS = 6;
 
 class AttackCardFilter
 {
@@ -66,21 +69,49 @@ CardSet Rules::getDefendCards(const Card &card, const CardSet &playerCards, cons
     return result;
 }
 
-PlayerId *Rules::pickNext(const std::vector<PlayerId*>& playersList, PlayerId* after)
+const PlayerId *Rules::pickNext(const std::vector<const PlayerId*>& playersList, const PlayerId* after)
 {
-    std::vector<PlayerId*>::const_iterator current = std::find(playersList.begin(), playersList.end(), after);
+    std::vector<const PlayerId*>::const_iterator current = std::find(playersList.begin(), playersList.end(), after);
 
     if (playersList.end() == current) {
         return NULL;
     }
 
-    std::vector<PlayerId*>::const_iterator next = current + 1;
+    std::vector<const PlayerId*>::const_iterator next = current + 1;
 
     if (playersList.end() == next) {
         next = playersList.begin();
     }
     return *next;
 }
+
+bool Rules::deal(Deck& deck, const std::vector<CardSet*> &cards)
+{
+    unsigned int cardsAmount = deck.size();
+
+    while (!deck.empty()) {
+        unsigned int playersToDeal = cards.size();
+        for (std::vector<CardSet*>::const_iterator it = cards.begin(); it != cards.end(); ++it) {
+            CardSet& playerCards = **it;
+            if (playerCards.size() >= MAX_PLAYER_CARDS) {
+                playersToDeal--;
+                continue;
+            }
+            Card card = *deck.begin();
+            playerCards.insert(card);
+            deck.erase(deck.begin());
+            if (deck.empty()) {
+                break;
+            }
+        }
+        if (!playersToDeal) {
+            break;
+        }
+    }
+
+    return cardsAmount != deck.size();
+}
+
 
 }
 

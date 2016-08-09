@@ -14,6 +14,8 @@ enum Suit
     SUIT_DIAMONDS,
     /** ♣ */
     SUIT_CLUBS,
+    /** It's better not to use in game */
+    SUIT_LAST
 };
 
 #endif // SUIT_H

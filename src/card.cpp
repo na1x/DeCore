@@ -14,7 +14,7 @@ bool Card::operator ==(const Card &other) const
 
 bool Card::operator <(const Card &other) const
 {
-    return mSuit < other.mSuit || mRank < other.mRank;
+    return mSuit * RANK_LAST + mRank < other.mSuit * RANK_LAST + other.mRank;
 }
 
 const Rank& Card::rank() const

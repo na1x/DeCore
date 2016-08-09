@@ -43,17 +43,17 @@ class Engine
      *
      * Stored for cleanup reasons.
      */
-    std::vector<PlayerId*> mGeneratedIds;
+    std::vector<const PlayerId*> mGeneratedIds;
     /**
      * @brief Players added to the game
      *
      * Each player identified by unique id
      */
-    std::map<PlayerId*, Player*> mPlayers;
+    std::map<const PlayerId*, Player*> mPlayers;
     /**
      * @brief Map of each player cards
      */
-    std::map<PlayerId*, CardSet> mPlayersCards;
+    std::map<const PlayerId*, CardSet> mPlayersCards;
     /**
      * @brief Game flow observers
      */
@@ -70,7 +70,7 @@ class Engine
     /**
      * @brief Attacker's player id
      */
-    PlayerId* mCurrentPlayer;
+    const PlayerId* mCurrentPlayer;
 
 public:
     /**

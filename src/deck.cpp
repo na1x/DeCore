@@ -7,19 +7,10 @@
 
 namespace decore {
 
-bool Deck::deal(std::map<PlayerId *, CardSet> &playersCards, unsigned int maxCards)
+void Deck::push_back(const Card &card)
 {
-    unsigned int cardsAmount = size();
-
-    for (std::map<PlayerId *, CardSet>::iterator it = playersCards.begin(); it != playersCards.end() && !empty(); ++it) {
-        CardSet& playerCards = it->second;
-        if (playerCards.size() >= maxCards) {
-            continue;
-        }
-        playerCards.insert(*erase(begin()));
-    }
-
-    return cardsAmount != size();
+    std::vector<Card>::push_back(card);
+    mTrumpSuit = card.suit();
 }
 
 void Deck::generate(const Rank *ranks, unsigned int ranksSize, const Suit *suits, unsigned int suitsSize)
@@ -43,7 +34,9 @@ unsigned int Deck::shuffle()
     std::srand(std::time(NULL));
     while (!cards.empty()) {
         int index = std::rand() * (cards.size() - 1) / RAND_MAX;
-        push_back(*cards.erase(cards.begin() + index));
+        Card card = cards[index];
+        cards.erase(cards.begin() + index);
+        push_back(card);
     }
 
     if (!empty()) {

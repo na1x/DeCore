@@ -22,12 +22,14 @@ SOURCES += \
     main.cpp \
     cardTest.cpp \
     engineTest.cpp \
-    rulesTest.cpp
+    rulesTest.cpp \
+    gameTest.cpp
 
 HEADERS += \
     include/cardTest.h \
     include/engineTest.h \
-    include/rulesTest.h
+    include/rulesTest.h \
+    include/gameTest.h
 
 INCLUDEPATH += $$PWD/../src/include
 DEPENDPATH += $$PWD/../src/include

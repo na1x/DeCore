@@ -9,12 +9,14 @@ class RulesTest : public CppUnit::TestFixture
     CPPUNIT_TEST(testPickNext);
     CPPUNIT_TEST(testAttackCards);
     CPPUNIT_TEST(testDefendCards);
+    CPPUNIT_TEST(testDeal);
     CPPUNIT_TEST_SUITE_END();
 
 public:
     void testPickNext();
     void testAttackCards();
     void testDefendCards();
+    void testDeal();
 };
 
 

@@ -24,7 +24,7 @@ public:
      * @brief The player gets its id.
      * @param id
      */
-    virtual void idCreated(PlayerId* id) = 0;
+    virtual void idCreated(const PlayerId* id) = 0;
     /**
      * @brief Makes first attack move
      *
@@ -34,7 +34,7 @@ public:
      * @param cardSet available cards
      * @return Card from the `cardSet`
      */
-    virtual const Card& attack(PlayerId* playerId, const CardSet& cardSet) = 0;
+    virtual const Card& attack(const PlayerId* playerId, const CardSet& cardSet) = 0;
     /**
      * @brief Makes extra attack move
      *
@@ -44,7 +44,7 @@ public:
      * @param cardSet available cards
      * @return Card from the `cardSet` if attack performed, NULL if attack ended
      */
-    virtual const Card* pitch(PlayerId* playerId, const CardSet& cardSet) = 0;
+    virtual const Card* pitch(const PlayerId* playerId, const CardSet& cardSet) = 0;
     /**
      * @brief The player defends against atacker with playerId
      *
@@ -54,7 +54,7 @@ public:
      * @param cardSet available cards
      * @return Card from the `cardSet` if index updated and defend performed, NULL means that defend is failed and table cards to be picked up by this player
      */
-    virtual const Card* defend(PlayerId* playerId, const CardSet& cardSet) = 0;
+    virtual const Card* defend(const PlayerId* playerId, const CardSet& cardSet) = 0;
     /**
      * @brief Notification from engine about updated cards
      * @param cardSet new cards

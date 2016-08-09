@@ -26,6 +26,8 @@ enum Rank
     RANK_KING,
     /** Ace */
     RANK_ACE,
+    /** It's better not to use in game */
+    RANK_LAST
 };
 
 #endif // RANK_H

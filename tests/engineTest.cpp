@@ -10,7 +10,7 @@ class TestEngine: public decore::Engine {
 
 class TestPlayer: public decore::Player {
 
-    void idCreated(PlayerId*)
+    void idCreated(const PlayerId*)
     {
 
     }
@@ -20,12 +20,12 @@ class TestPlayer: public decore::Player {
 
     }
 
-    void cardsReceived(PlayerId*, const CardSet&)
+    void cardsReceived(const PlayerId*, const CardSet&)
     {
 
     }
 
-    void cardsReceived(PlayerId*, int)
+    void cardsReceived(const PlayerId*, int)
     {
 
     }
@@ -35,24 +35,24 @@ class TestPlayer: public decore::Player {
 
     }
 
-    void cardsDropped(PlayerId*, const CardSet&)
+    void cardsDropped(const PlayerId*, const CardSet&)
     {
 
     }
 
-    const Card& attack(PlayerId*, const CardSet& set)
+    const Card& attack(const PlayerId*, const CardSet& set)
     {
         // dont care
         return *set.begin();
     }
 
-    const Card* pitch(PlayerId*, const CardSet&)
+    const Card* pitch(const PlayerId*, const CardSet&)
     {
         // dont care
         return NULL;
     }
 
-    const Card* defend(PlayerId*, const CardSet&)
+    const Card* defend(const PlayerId*, const CardSet&)
     {
         // dont care
         return NULL;
@@ -70,7 +70,7 @@ void EngineTest::testAddPlayers()
     TestEngine engine;
 
     // set used to check uniqueness of ids
-    std::set<PlayerId*> playerIds;
+    std::set<const PlayerId*> playerIds;
 
     Player* players[] = {
         new TestPlayer(),
@@ -83,7 +83,7 @@ void EngineTest::testAddPlayers()
     // add players
     Player** playerPtr = players;
     while(*playerPtr) {
-        PlayerId* added = engine.add(**playerPtr);
+        const PlayerId* added = engine.add(**playerPtr);
         CPPUNIT_ASSERT(added);
         CPPUNIT_ASSERT(playerIds.insert(added).second);
         playerPtr++;
@@ -94,7 +94,7 @@ void EngineTest::testAddDuplicatedPlayers()
 {
     TestEngine engine;
     TestPlayer player;
-    PlayerId* id0, *id1;
+    const PlayerId* id0, *id1;
     CPPUNIT_ASSERT(id0 = engine.add(player));
     CPPUNIT_ASSERT(id1 = engine.add(player));
     CPPUNIT_ASSERT(id0 != id1);
