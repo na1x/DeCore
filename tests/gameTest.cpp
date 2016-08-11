@@ -2,12 +2,9 @@
 #include "engine.h"
 #include "player.h"
 #include "deck.h"
+#include "defines.h"
 
 using namespace decore;
-
-#define ARRAY_SIZE(x) \
-    sizeof(x) / sizeof(x[0])
-
 
 class TestPlayer0 : public Player
 {
@@ -42,20 +39,27 @@ public:
 
     void gameStarted(Suit &trumpSuit, const CardSet &cardSet)
     {
+        (void)trumpSuit;
+        (void)cardSet;
     }
     void cardsLeft(const CardSet &cardSet)
     {
+        (void)cardSet;
     }
     void cardsDropped(const PlayerId*playerId, const CardSet &cardSet)
     {
+        (void)playerId;
+        (void)cardSet;
     }
     void cardsReceived(const PlayerId* playerId, const CardSet& cardSet)
     {
-
+        (void)playerId;
+        (void)cardSet;
     }
     void cardsReceived(const PlayerId* playerId, int cardsAmount)
     {
-
+        (void)playerId;
+        (void)cardsAmount;
     }
 };
 

@@ -3,6 +3,7 @@
 #include "rules.h"
 #include "cardSet.h"
 #include "deck.h"
+#include "defines.h"
 
 class Id : public decore::PlayerId
 {
@@ -116,7 +117,7 @@ void RulesTest::testDefendCards()
     CPPUNIT_ASSERT(defendCards.empty());
 }
 
-void RulesTest::testDeal()
+void RulesTest::testDeal0()
 {
     using namespace decore;
 
@@ -151,5 +152,71 @@ void RulesTest::testDeal()
     CPPUNIT_ASSERT(c1.find(Card(SUIT_CLUBS, RANK_10)) != c1.end());
 
     CPPUNIT_ASSERT(c2.find(Card(SUIT_CLUBS, RANK_8)) != c2.end());
+}
+
+void RulesTest::testDeal1()
+{
+    using namespace decore;
+    const unsigned int MAX_CARDS = 6;
+
+    Deck deck;
+
+    Rank ranks[] = {
+        RANK_6,
+        RANK_7,
+        RANK_8,
+        RANK_9,
+        RANK_10,
+        RANK_JACK,
+        RANK_QUEEN,
+        RANK_KING,
+        RANK_ACE,
+    };
+
+    Suit suits[] = {
+        SUIT_SPADES,
+        SUIT_HEARTS,
+        SUIT_DIAMONDS,
+        SUIT_CLUBS,
+    };
+
+    deck.generate(ranks, ARRAY_SIZE(ranks), suits, ARRAY_SIZE(suits));
+
+    CardSet c0;
+    CardSet c1;
+    CardSet c2;
+
+    std::vector<CardSet*> cards;
+
+    cards.push_back(&c0);
+    cards.push_back(&c1);
+    cards.push_back(&c2);
+
+    CPPUNIT_ASSERT(Rules::deal(deck, cards));
+
+    CPPUNIT_ASSERT(MAX_CARDS == c0.size());
+    CPPUNIT_ASSERT(MAX_CARDS == c1.size());
+    CPPUNIT_ASSERT(MAX_CARDS == c2.size());
+
+    CardSet c3;
+    cards.push_back(&c3);
+
+    CardSet c0copy(c0);
+    CardSet c1copy(c1);
+    CardSet c2copy(c2);
+
+    CPPUNIT_ASSERT(Rules::deal(deck, cards));
+    CPPUNIT_ASSERT(MAX_CARDS == c0.size());
+    CPPUNIT_ASSERT(MAX_CARDS == c1.size());
+    CPPUNIT_ASSERT(MAX_CARDS == c2.size());
+    CPPUNIT_ASSERT(MAX_CARDS == c3.size());
+
+    CPPUNIT_ASSERT(c0copy == c0);
+    CPPUNIT_ASSERT(c1copy == c1);
+    CPPUNIT_ASSERT(c2copy == c2);
+
+    CPPUNIT_ASSERT(!Rules::deal(deck, cards));
+
+    CPPUNIT_ASSERT(12 == deck.size());
 }
 

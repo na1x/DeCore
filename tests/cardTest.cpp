@@ -2,9 +2,8 @@
 #include "cardSet.h"
 #include "card.h"
 #include "deck.h"
+#include "defines.h"
 
-#define ARRAY_SIZE(x) \
-    sizeof(x) / sizeof(x[0])
 #define GENERATE(x, y) \
     generate(x, ARRAY_SIZE(x), y, ARRAY_SIZE(y));
 
@@ -53,7 +52,7 @@ void CardTest::testGenerate()
 
     deck.generate(ranks, ranksSize, suits, suitsSize);
 
-    CPPUNIT_ASSERT(ranksSize * suitsSize == deck.size());
+    CPPUNIT_ASSERT(36 == deck.size());
 }
 
 void CardTest::testSetAddAll()

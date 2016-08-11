@@ -29,7 +29,8 @@ HEADERS += \
     include/cardTest.h \
     include/engineTest.h \
     include/rulesTest.h \
-    include/gameTest.h
+    include/gameTest.h \
+    include/defines.h
 
 INCLUDEPATH += $$PWD/../src/include
 DEPENDPATH += $$PWD/../src/include
