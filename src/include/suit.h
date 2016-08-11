@@ -1,6 +1,8 @@
 #ifndef SUIT_H
 #define SUIT_H
 
+namespace decore {
+
 /**
  * @brief The Suit enum
  */
@@ -17,5 +19,7 @@ enum Suit
     /** It's better not to use in game */
     SUIT_LAST
 };
+
+}
 
 #endif // SUIT_H

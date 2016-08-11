@@ -7,7 +7,7 @@
 #define GENERATE(x, y) \
     generate(x, ARRAY_SIZE(x), y, ARRAY_SIZE(y));
 
-static decore::CardSet generate(const Rank *ranks, unsigned int ranksSize, const Suit *suits, unsigned int suitsSize)
+static decore::CardSet generate(const decore::Rank *ranks, unsigned int ranksSize, const decore::Suit *suits, unsigned int suitsSize)
 {
     decore::CardSet res;
     for(unsigned int suitIndex = 0; suitIndex < suitsSize; ++suitIndex) {

@@ -118,6 +118,18 @@ public:
     bool playRound();
 
 private:
+
+    class GameStartNotification
+    {
+        const Suit& mTrumpSuit;
+        const std::vector<const PlayerId*>& mPlayers;
+        const CardSet mGameCards;
+
+    public:
+        GameStartNotification(const Suit& trumpSuit, const std::vector<const PlayerId*>& players, const CardSet& gameCards);
+        void operator()(GameObserver* observer);
+    };
+
     /**
      * @brief Checks if the game is ended
      * @return true if ended

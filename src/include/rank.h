@@ -1,6 +1,8 @@
 #ifndef RANK_H
 #define RANK_H
 
+namespace decore {
+
 /**
  * @brief The Rank enum
  *
@@ -30,4 +32,5 @@ enum Rank
     RANK_LAST
 };
 
+}
 #endif // RANK_H

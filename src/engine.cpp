@@ -72,6 +72,12 @@ bool Engine::setDeck(const Deck &deck)
 
     mDeck = new Deck(deck);
 
+    CardSet cards;
+
+    cards.insert(deck.begin(), deck.end());
+
+    std::for_each(mGameObservers.begin(), mGameObservers.end(), GameStartNotification(mDeck->trumpSuit(), mGeneratedIds, cards));
+
     return true;
 }
 
@@ -135,6 +141,17 @@ bool Engine::gameEnded() const
     }
 
     return !playersWithCards;
+}
+
+Engine::GameStartNotification::GameStartNotification(const Suit &trumpSuit, const std::vector<const PlayerId *> &players, const CardSet &gameCards)
+    : mTrumpSuit(trumpSuit)
+    , mPlayers(players)
+    , mGameCards(gameCards)
+{}
+
+void Engine::GameStartNotification::operator()(GameObserver*observer)
+{
+    observer->gameStarted(mTrumpSuit, mGameCards, mPlayers);
 }
 
 }

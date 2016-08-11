@@ -29,8 +29,9 @@ public:
      * @brief Game is started
      * @param trumpSuit trump suit
      * @param cardSet full game card set
+     * @param players players in the game
      */
-    virtual void gameStarted(Suit& trumpSuit, const CardSet& cardSet) = 0;
+    virtual void gameStarted(const Suit& trumpSuit, const CardSet& cardSet, const std::vector<const PlayerId*> players) = 0;
     /**
      * @brief Some player picked up cards (defend failed)
      * @param playerId player id
@@ -42,7 +43,7 @@ public:
      * @param playerId player
      * @param cardsAmount cards amount
      */
-    virtual void cardsReceived(const PlayerId* playerId, int cardsAmount) = 0;
+    virtual void cardsReceived(const PlayerId* playerId, unsigned int cardsAmount) = 0;
     /**
      * @brief Cards left game
      * @param cardSet cards

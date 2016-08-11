@@ -16,12 +16,9 @@ CardSet::~CardSet()
 
 bool CardSet::addAll(const std::vector<Card> &cards)
 {
-    for(std::vector<Card>::const_iterator it = cards.begin(); it != cards.end(); ++it) {
-        if (!insert(*it).second) {
-            return false;
-        }
-    }
-    return true;
+    unsigned int oldSize = size();
+    std::copy(cards.begin(), cards.end(), std::inserter(*this, begin()));
+    return oldSize + cards.size() == size();
 }
 
 /**

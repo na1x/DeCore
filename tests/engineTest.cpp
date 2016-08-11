@@ -15,7 +15,7 @@ class TestPlayer: public decore::Player {
 
     }
 
-    void gameStarted(Suit &, const CardSet &)
+    void gameStarted(const Suit&, const CardSet&, const std::vector<const PlayerId*>)
     {
 
     }
@@ -25,7 +25,7 @@ class TestPlayer: public decore::Player {
 
     }
 
-    void cardsReceived(const PlayerId*, int)
+    void cardsReceived(const PlayerId*, unsigned int)
     {
 
     }

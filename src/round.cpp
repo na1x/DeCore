@@ -23,11 +23,7 @@ Round::Round(const std::vector<const PlayerId*>& attackers,
 
 void Round::play()
 {
-    // 1. deal cards
-    // 2. make moves
-    // 3. till round complete
-    // 4. check if game ended
-
+    // deal cards
     dealCards();
 
     const PlayerId* currentAttackerId = mAttackers[0];
@@ -39,13 +35,32 @@ void Round::play()
 
     Player& defender = *mPlayers[mDefender];
 
+    unsigned int passedCounter = 0;
+
     while (!(attackCards = Rules::getAttackCards(tableCards, mPlayersCards[currentAttackerId])).empty()) {
 
         Player& currentAttacker = *mPlayers[currentAttackerId];
-        Card attackCard = currentAttacker.attack(mDefender, attackCards);
+        const Card* attackCardPtr;
+
+        if (tableCards.empty()) {
+            attackCardPtr = &currentAttacker.attack(mDefender, attackCards);
+        } else {
+            attackCardPtr = currentAttacker.pitch(mDefender, attackCards);
+            if (attackCardPtr) {
+                passedCounter = 0;
+            } else {
+                // "pass"
+                if (++passedCounter == mAttackers.size()) {
+                    // all attackers "passed" - round ended - defend succeeded
+                    return;
+                }
+            }
+        }
+
+        Card attackCard = *attackCardPtr;
 
         if(!attackCards.erase(attackCard)) {
-            // invalid card returned
+            // invalid card returned - the card is not from attackCards
             if (attackCards.empty()) {
                 // very unexpected
                 return;
@@ -66,8 +81,7 @@ void Round::play()
                 || !defendCardPtr
                 || defendCards.find(*defendCardPtr) == defendCards.end()) {
             // defend failed
-            defenderCards.addAll(mAttackCards);
-            defenderCards.addAll(mDefendCards);
+            defenderCards.insert(tableCards.begin(), tableCards.end());
             return;
         } else {
             mDefendCards.push_back(*defendCardPtr);
