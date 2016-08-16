@@ -6,6 +6,14 @@
 
 using namespace decore;
 
+#define MAX_CARDS (6)
+
+GameTest::TestPlayer0::TestPlayer0()
+    : mCardsUpdatedCounter(0)
+{
+
+}
+
 void GameTest::TestPlayer0::idCreated(const PlayerId*id)
 {
     mId = id;
@@ -28,7 +36,8 @@ const Card *GameTest::TestPlayer0::defend(const PlayerId*, const CardSet &cardSe
 
 void GameTest::TestPlayer0::cardsUpdated(const CardSet &cardSet)
 {
-    mPlayerCards = cardSet;
+    mPlayerCards.push_back(cardSet);
+    mCardsUpdatedCounter++;
 }
 
 void GameTest::testInitialization()
@@ -103,12 +112,17 @@ void GameTest::testOneRound()
 void GameTest::testObservers()
 {
     Engine engine;
-    TestPlayer0 player0;
-    TestPlayer0 player1;
+    TestPlayer0 player0, player1, player2;
+
+    std::vector<TestPlayer0*> players;
+    players.push_back(&player0);
+    players.push_back(&player1);
+    players.push_back(&player2);
 
     std::vector<const PlayerId*> playerIds;
-    playerIds.push_back(engine.add(player0));
-    playerIds.push_back(engine.add(player1));
+    for(std::vector<TestPlayer0*>::iterator it = players.begin(); it != players.end(); ++ it) {
+        playerIds.push_back(engine.add(**it));
+    }
 
     Observer observer;
 
@@ -116,28 +130,35 @@ void GameTest::testObservers()
 
     Deck deck;
 
-    Rank ranks[] = {
-        RANK_6,
-        RANK_7,
-        RANK_8,
-        RANK_9,
-        RANK_10,
-        RANK_JACK,
-        RANK_QUEEN,
-        RANK_KING,
-        RANK_ACE,
-    };
+    // cards preset for one round
+    // first attacker (player0) has cards for 6 moves
+    // defender (player1) has cards for successful defend
+    // player2 has trumps only, but it should not receive move for attack
+    deck.push_back(Card(SUIT_CLUBS, RANK_6));
+    deck.push_back(Card(SUIT_CLUBS, RANK_7));
+    deck.push_back(Card(SUIT_SPADES, RANK_6));
 
-    Suit suits[] = {
-        SUIT_SPADES,
-        SUIT_HEARTS,
-        SUIT_DIAMONDS,
-        SUIT_CLUBS,
-    };
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_6));
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_7));
+    deck.push_back(Card(SUIT_SPADES, RANK_7));
 
-    deck.generate(ranks, ARRAY_SIZE(ranks), suits, ARRAY_SIZE(suits));
+    deck.push_back(Card(SUIT_HEARTS, RANK_6));
+    deck.push_back(Card(SUIT_HEARTS, RANK_8));
+    deck.push_back(Card(SUIT_SPADES, RANK_8));
 
-    deck.shuffle();
+    deck.push_back(Card(SUIT_CLUBS, RANK_8));
+    deck.push_back(Card(SUIT_CLUBS, RANK_9));
+    deck.push_back(Card(SUIT_SPADES, RANK_9));
+
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_9));
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_10));
+    deck.push_back(Card(SUIT_SPADES, RANK_10));
+
+    deck.push_back(Card(SUIT_HEARTS, RANK_10));
+    deck.push_back(Card(SUIT_HEARTS, RANK_JACK));
+    deck.push_back(Card(SUIT_SPADES, RANK_JACK));
+
+    deck.push_back(Card(SUIT_SPADES, RANK_ACE));
 
     CPPUNIT_ASSERT(engine.setDeck(deck)); // OK
 
@@ -147,6 +168,7 @@ void GameTest::testObservers()
     std::copy(deck.begin(), deck.end(), std::back_inserter(deckCards));
     // if deck is shuffled the observer should not receive same cardset
     CPPUNIT_ASSERT(deckCards != observerGameCards);
+    CPPUNIT_ASSERT(deckCards.size() == observerGameCards.size());
 
     // check all observers, players are observers also
     std::vector<Observer*> observers;
@@ -162,40 +184,53 @@ void GameTest::testObservers()
         CPPUNIT_ASSERT(currentObserverGameCards == observerGameCards);
     }
 
-    CPPUNIT_ASSERT(engine.playRound()); // OK, at least one round played
-}
+    CPPUNIT_ASSERT(engine.playRound());
 
+    for(std::vector<TestPlayer0*>::iterator it = players.begin(); it != players.end(); ++ it) {
+        CPPUNIT_ASSERT((*it)->mCardsUpdatedCounter);
+        TestPlayer0& player = **it;
+        CPPUNIT_ASSERT(!player.mPlayerCards.empty());
+        // check deal
+        CPPUNIT_ASSERT(player.mPlayerCards[0].size() == MAX_CARDS);
+        // compare last player's update in the round with observer's
+        CPPUNIT_ASSERT(observer.mPlayersCards[player.mId] == player.mPlayerCards[player.mPlayerCards.size() - 1].size());
+    }
+
+    // deck has for player0 and player1 to play the round without pitch from player2
+    CPPUNIT_ASSERT(1 == player2.mPlayerCards.size());
+}
 
 void GameTest::Observer::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> players)
 {
     mPlayers = players;
     mTrumpSuit = trumpSuit;
     mGameCards = cardSet;
+    for(std::vector<const PlayerId*>::iterator it = mPlayers.begin(); it != mPlayers.end(); ++it) {
+        mPlayersCards[*it] = 0;
+    }
+    mGameCardsCount = mGameCards.size();
 }
 
 void GameTest::Observer::cardsLeft(const CardSet &cardSet)
 {
-    (void)cardSet;
+    mGameCardsCount -= cardSet.size();
 }
 
 void GameTest::Observer::cardsDropped(const PlayerId *playerId, const CardSet &cardSet)
 {
-    (void)playerId;
-    (void)cardSet;
+    mPlayersCards[playerId] -= cardSet.size();
 }
 
 void GameTest::Observer::cardsReceived(const PlayerId *playerId, const CardSet &cardSet)
 {
-    (void)playerId;
-    (void)cardSet;
+    mPlayersCards[playerId] += cardSet.size();
 }
 
 void GameTest::Observer::cardsReceived(const PlayerId *playerId, unsigned int cardsAmount)
 {
-    (void)playerId;
-    (void)cardsAmount;
+    mPlayersCards[playerId] += cardsAmount;
+    mGameCardsCount -= cardsAmount;
 }
-
 
 void GameTest::TestPlayer0::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> players)
 {
