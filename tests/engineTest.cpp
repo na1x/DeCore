@@ -94,9 +94,10 @@ const Card *EngineTest::TestPlayer::pitch(const PlayerId *playerId, const CardSe
     return cardSet.empty() ? NULL : &*cardSet.begin();
 }
 
-const Card *EngineTest::TestPlayer::defend(const PlayerId *playerId, const CardSet &cardSet)
+const Card *EngineTest::TestPlayer::defend(const PlayerId *playerId, const Card& card, const CardSet &cardSet)
 {
     (void)playerId;
+    (void)card;
     return cardSet.empty() ? NULL : &*cardSet.begin();
 }
 

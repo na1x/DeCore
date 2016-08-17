@@ -9,7 +9,6 @@ using namespace decore;
 #define MAX_CARDS (6)
 
 GameTest::TestPlayer0::TestPlayer0()
-    : mCardsUpdatedCounter(0)
 {
 
 }
@@ -21,23 +20,38 @@ void GameTest::TestPlayer0::idCreated(const PlayerId*id)
 
 const Card &GameTest::TestPlayer0::attack(const PlayerId*, const CardSet &cardSet)
 {
-    return *cardSet.begin();
+    const Card& res = *cardSet.begin();
+    updateCards(&res);
+    return res;
 }
 
 const Card *GameTest::TestPlayer0::pitch(const PlayerId*, const CardSet &cardSet)
 {
-    return cardSet.empty() ? static_cast<Card*>(NULL) : &*cardSet.begin();
+    if (cardSet.empty()) {
+        return NULL;
+    }
+
+    const Card* res = &*cardSet.begin();
+    updateCards(res);
+    return res;
 }
 
-const Card *GameTest::TestPlayer0::defend(const PlayerId*, const CardSet &cardSet)
+const Card *GameTest::TestPlayer0::defend(const PlayerId*, const Card &card, const CardSet &cardSet)
 {
-    return cardSet.empty() ? static_cast<Card*>(NULL) : &*cardSet.begin();
+    (void)card;
+
+    if (cardSet.empty()) {
+        return NULL;
+    }
+
+    const Card* res = &*cardSet.begin();
+    updateCards(res);
+    return res;
 }
 
 void GameTest::TestPlayer0::cardsUpdated(const CardSet &cardSet)
 {
     mPlayerCards.push_back(cardSet);
-    mCardsUpdatedCounter++;
 }
 
 void GameTest::testInitialization()
@@ -187,7 +201,6 @@ void GameTest::testObservers()
     CPPUNIT_ASSERT(engine.playRound());
 
     for(std::vector<TestPlayer0*>::iterator it = players.begin(); it != players.end(); ++ it) {
-        CPPUNIT_ASSERT((*it)->mCardsUpdatedCounter);
         TestPlayer0& player = **it;
         CPPUNIT_ASSERT(!player.mPlayerCards.empty());
         // check deal
@@ -255,4 +268,11 @@ void GameTest::TestPlayer0::cardsReceived(const PlayerId *playerId, const CardSe
 void GameTest::TestPlayer0::cardsReceived(const PlayerId *playerId, unsigned int cardsAmount)
 {
     Observer::cardsReceived(playerId, cardsAmount);
+}
+
+void GameTest::TestPlayer0::updateCards(const Card *card)
+{
+    CardSet currentCards = *(mPlayerCards.end() - 1);
+    CPPUNIT_ASSERT(currentCards.erase(*card));
+    mPlayerCards.push_back(currentCards);
 }

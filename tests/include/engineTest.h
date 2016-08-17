@@ -29,7 +29,7 @@ private:
         void idCreated(const decore::PlayerId *id);
         const decore::Card &attack(const decore::PlayerId *playerId, const decore::CardSet &cardSet);
         const decore::Card *pitch(const decore::PlayerId *playerId, const decore::CardSet &cardSet);
-        const decore::Card *defend(const decore::PlayerId *playerId, const decore::CardSet &cardSet);
+        const decore::Card *defend(const decore::PlayerId *playerId, const decore::Card& card, const decore::CardSet &cardSet);
         void cardsUpdated(const decore::CardSet &cardSet);
     };
 

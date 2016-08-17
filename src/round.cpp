@@ -107,25 +107,25 @@ void Round::play()
         std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsDroppedNotification(currentAttackerId, attackCard));
         tableCards.addAttackCard(attackCard);
         mPlayersCards[currentAttackerId].erase(attackCard);
-        mPlayers[currentAttackerId]->cardsUpdated(mPlayersCards[currentAttackerId]);
 
         CardSet defendCards = Rules::getDefendCards(attackCard, defenderCards, mDeck.trumpSuit());
 
-        const Card* defendCardPtr = defender.defend(currentAttackerId, defendCards);
+        const Card* defendCardPtr = defender.defend(currentAttackerId, attackCard, defendCards);
 
-        if(defendCards.empty()
-                || !defendCardPtr
-                || defendCards.find(*defendCardPtr) == defendCards.end()) {
+        bool noCardsToDefend = defendCards.empty();
+        bool userGrabbedCards = !defendCardPtr;
+        bool invalidDefendCard = defendCards.find(*defendCardPtr) == defendCards.end();
+
+        if(noCardsToDefend || userGrabbedCards || invalidDefendCard) {
             // defend failed
             defenderCards.insert(tableCards.all().begin(), tableCards.all().end());
-            mPlayers[mDefender]->cardsUpdated(defenderCards);
+            defender.cardsUpdated(defenderCards);
             std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsReceivedNotification(mDefender, tableCards.all()));
             return;
         } else {
             tableCards.addDefendCard(*defendCardPtr);
             defenderCards.erase(*defendCardPtr);
             std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsDroppedNotification(mDefender, *defendCardPtr));
-            mPlayers[mDefender]->cardsUpdated(defenderCards);
         }
 
         if (defenderCards.empty()) {

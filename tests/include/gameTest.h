@@ -40,13 +40,12 @@ private:
     public:
         const decore::PlayerId* mId;
         std::vector<decore::CardSet> mPlayerCards;
-        unsigned int mCardsUpdatedCounter;
 
         TestPlayer0();
         void idCreated(const decore::PlayerId *id);
         const decore::Card &attack(const decore::PlayerId *, const decore::CardSet &cardSet);
         const decore::Card *pitch(const decore::PlayerId *, const decore::CardSet &cardSet);
-        const decore::Card *defend(const decore::PlayerId *, const decore::CardSet &cardSet);
+        const decore::Card *defend(const decore::PlayerId *, const decore::Card& card, const decore::CardSet &cardSet);
         void cardsUpdated(const decore::CardSet &cardSet);
 
         void gameStarted(const decore::Suit &trumpSuit, const decore::CardSet &cardSet, const std::vector<const decore::PlayerId *> players);
@@ -54,6 +53,9 @@ private:
         void cardsDropped(const decore::PlayerId *playerId, const decore::CardSet &cardSet);
         void cardsReceived(const decore::PlayerId* playerId, const decore::CardSet& cardSet);
         void cardsReceived(const decore::PlayerId* playerId, unsigned int cardsAmount);
+
+    private:
+        void updateCards(const decore::Card* card);
     };
 };
 

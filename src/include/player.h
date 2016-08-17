@@ -12,6 +12,12 @@ class Card;
 
 /**
  * @brief The player abstraction
+ *
+ * About player's cards:
+ * The cards maintaned by engine and there's no way(and no need) for the player to get info about all its cards.
+ * To track the cards:
+ * - remember list of the cards in Player::cardsUpdated()
+ * - remove cards from the list in Player::attack(), Player::pitch() and Player::defend()
  */
 class Player: public GameObserver
 {
@@ -51,13 +57,20 @@ public:
      * The move is optinal: to pick up the cards return NULL - this means that defend is failed.
      * Note: the method is invoked even if cardSet is empty - returned value ignored in the case
      * @param playerId attacker's player id
+     * @param attackCard card to beat
      * @param cardSet available cards
      * @return Card from the `cardSet` if index updated and defend performed, NULL means that defend is failed and table cards to be picked up by this player
      */
-    virtual const Card* defend(const PlayerId* playerId, const CardSet& cardSet) = 0;
+    virtual const Card* defend(const PlayerId* playerId, const Card& attackCard, const CardSet& cardSet) = 0;
     /**
      * @brief Notification from engine about updated cards
-     * @param cardSet new cards
+     *
+     * Invoked when user reveives cards:
+     * - from the deck
+     * - from the table (grabbed)
+     *
+     * For example: the player has 5 cards, after the deal he will have 6 cards; for this case the method will be invoked with `cardSet`.size == 6, which includes 5 "old" cards and 1 new card.
+     * @param cardSet full set of the cards the player have.
      */
     virtual void cardsUpdated(const CardSet& cardSet) = 0;
 };
