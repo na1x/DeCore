@@ -9,30 +9,50 @@ class GameTest: public CppUnit::TestFixture
 {
     CPPUNIT_TEST_SUITE(GameTest);
     CPPUNIT_TEST(testInitialization);
-    CPPUNIT_TEST(testOneRound);
-    CPPUNIT_TEST(testObservers);
+    CPPUNIT_TEST(testOneRound00);
+    CPPUNIT_TEST(testOneRound01);
+    CPPUNIT_TEST(testMoveTransfer00);
     CPPUNIT_TEST_SUITE_END();
 
 public:
     void testInitialization();
-    void testOneRound();
-    void testObservers();
+    void testOneRound00();
+    void testOneRound01();
+    void testMoveTransfer00();
 
 private:
     class Observer : public decore::GameObserver
     {
+
     public:
+        class RoundData
+        {
+        public:
+            std::vector<const decore::PlayerId*> mPlayers;
+            std::map<const decore::PlayerId*, decore::CardSet> mDroppedCards;
+            std::map<const decore::PlayerId*, decore::CardSet> mPickedUpCards;
+        };
+
         std::vector<const decore::PlayerId*> mPlayers;
         decore::CardSet mGameCards;
         unsigned int mGameCardsCount;
         decore::Suit mTrumpSuit;
         std::map<const decore::PlayerId*, unsigned int> mPlayersCards;
+        std::vector<const RoundData*> mRoundsData;
+        unsigned int mCurrentRoundIndex;
 
+        Observer();
+        ~Observer();
         void gameStarted(const decore::Suit &trumpSuit, const decore::CardSet &cardSet, const std::vector<const decore::PlayerId *> players);
         void cardsLeft(const decore::CardSet &cardSet);
         void cardsDropped(const decore::PlayerId *playerId, const decore::CardSet &cardSet);
-        void cardsReceived(const decore::PlayerId* playerId, const decore::CardSet& cardSet);
-        void cardsReceived(const decore::PlayerId* playerId, unsigned int cardsAmount);
+        void cardsPickedUp(const decore::PlayerId* playerId, const decore::CardSet& cardSet);
+        void cardsDealed(const decore::PlayerId* playerId, unsigned int cardsAmount);
+        void roundStarted(unsigned int roundIndex, const std::vector<const decore::PlayerId *> attackers, const decore::PlayerId *defender);
+        void roundEnded(unsigned int roundIndex);
+
+    private:
+        RoundData* mCurrentRoundData;
     };
 
     class TestPlayer0 : public decore::Player, public Observer
@@ -47,12 +67,14 @@ private:
         const decore::Card *pitch(const decore::PlayerId *, const decore::CardSet &cardSet);
         const decore::Card *defend(const decore::PlayerId *, const decore::Card& card, const decore::CardSet &cardSet);
         void cardsUpdated(const decore::CardSet &cardSet);
+        void roundStarted(unsigned int roundIndex, const std::vector<const decore::PlayerId *> attackers, const decore::PlayerId *defender);
+        void roundEnded(unsigned int roundIndex);
 
         void gameStarted(const decore::Suit &trumpSuit, const decore::CardSet &cardSet, const std::vector<const decore::PlayerId *> players);
         void cardsLeft(const decore::CardSet &cardSet);
         void cardsDropped(const decore::PlayerId *playerId, const decore::CardSet &cardSet);
-        void cardsReceived(const decore::PlayerId* playerId, const decore::CardSet& cardSet);
-        void cardsReceived(const decore::PlayerId* playerId, unsigned int cardsAmount);
+        void cardsPickedUp(const decore::PlayerId* playerId, const decore::CardSet& cardSet);
+        void cardsDealed(const decore::PlayerId* playerId, unsigned int cardsAmount);
 
     private:
         void updateCards(const decore::Card* card);

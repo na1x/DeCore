@@ -98,7 +98,7 @@ void GameTest::testInitialization()
     CPPUNIT_ASSERT(engine.playRound()); // OK, at least one round played
 }
 
-void GameTest::testOneRound()
+void GameTest::testOneRound00()
 {
     Engine engine;
     TestPlayer0 player0;
@@ -123,7 +123,7 @@ void GameTest::testOneRound()
 
 }
 
-void GameTest::testObservers()
+void GameTest::testOneRound01()
 {
     Engine engine;
     TestPlayer0 player0, player1, player2;
@@ -174,7 +174,7 @@ void GameTest::testObservers()
 
     deck.push_back(Card(SUIT_SPADES, RANK_ACE));
 
-    CPPUNIT_ASSERT(engine.setDeck(deck)); // OK
+    CPPUNIT_ASSERT(engine.setDeck(deck));
 
     // check game started
     std::vector<Card> observerGameCards, deckCards;
@@ -213,6 +213,77 @@ void GameTest::testObservers()
     CPPUNIT_ASSERT(1 == player2.mPlayerCards.size());
 }
 
+static bool checkCard(const CardSet& set, const Card& card)
+{
+    return !set.empty() && set.find(card) != set.end();
+}
+
+void GameTest::testMoveTransfer00()
+{
+    // play two rounds
+    // first round failed to attack
+    // play one more round
+    // check that "move" transfered to player2
+    Engine engine;
+    TestPlayer0 player0, player1, player2;
+
+    std::vector<TestPlayer0*> players;
+    players.push_back(&player0);
+    players.push_back(&player1);
+    players.push_back(&player2);
+
+    std::vector<const PlayerId*> playerIds;
+    for(std::vector<TestPlayer0*>::iterator it = players.begin(); it != players.end(); ++ it) {
+        playerIds.push_back(engine.add(**it));
+    }
+
+    Deck deck;
+
+    deck.push_back(Card(SUIT_SPADES, RANK_8));
+    deck.push_back(Card(SUIT_SPADES, RANK_7));
+    deck.push_back(Card(SUIT_SPADES, RANK_6));
+
+    deck.push_back(Card(SUIT_SPADES, RANK_9));
+
+    CPPUNIT_ASSERT(engine.setDeck(deck));
+
+    CPPUNIT_ASSERT(engine.playRound());
+
+    CPPUNIT_ASSERT(!player0.mRoundsData.empty());
+
+    const Observer::RoundData& round0 = *player0.mRoundsData[0];
+
+    CPPUNIT_ASSERT(1 == round0.mDroppedCards.size());
+    CPPUNIT_ASSERT(checkCard(round0.mDroppedCards.at(playerIds[0]), deck[0]));
+    CPPUNIT_ASSERT(1 == round0.mPickedUpCards.size());
+    CPPUNIT_ASSERT(checkCard(round0.mPickedUpCards.at(playerIds[1]), deck[0]));
+
+    CPPUNIT_ASSERT(engine.playRound());
+
+    CPPUNIT_ASSERT(2 == player0.mRoundsData.size());
+
+    const Observer::RoundData& round1 = *player0.mRoundsData[1];
+
+    CPPUNIT_ASSERT(2 == round1.mDroppedCards.size());
+    CPPUNIT_ASSERT(checkCard(round1.mDroppedCards.at(playerIds[2]), deck[2]));
+    CPPUNIT_ASSERT(checkCard(round1.mDroppedCards.at(playerIds[0]), deck[3]));
+    CPPUNIT_ASSERT(round1.mPickedUpCards.empty());
+}
+
+GameTest::Observer::Observer()
+    : mCurrentRoundIndex(-1)
+    , mCurrentRoundData(NULL)
+{
+
+}
+
+GameTest::Observer::~Observer()
+{
+    for (std::vector<const RoundData*>::iterator it = mRoundsData.begin(); it != mRoundsData.end(); ++it) {
+        delete *it;
+    }
+}
+
 void GameTest::Observer::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> players)
 {
     mPlayers = players;
@@ -232,17 +303,42 @@ void GameTest::Observer::cardsLeft(const CardSet &cardSet)
 void GameTest::Observer::cardsDropped(const PlayerId *playerId, const CardSet &cardSet)
 {
     mPlayersCards[playerId] -= cardSet.size();
+    CardSet& set = mCurrentRoundData->mDroppedCards[playerId];
+    unsigned int oldSize = set.size();
+    set.insert(cardSet.begin(), cardSet.end());
+    CPPUNIT_ASSERT(oldSize + cardSet.size() == set.size());
 }
 
-void GameTest::Observer::cardsReceived(const PlayerId *playerId, const CardSet &cardSet)
+void GameTest::Observer::cardsPickedUp(const PlayerId *playerId, const CardSet &cardSet)
 {
     mPlayersCards[playerId] += cardSet.size();
+    CardSet& set = mCurrentRoundData->mPickedUpCards[playerId];
+    unsigned int oldSize = set.size();
+    set.insert(cardSet.begin(), cardSet.end());
+    CPPUNIT_ASSERT(oldSize + cardSet.size() == set.size());
 }
 
-void GameTest::Observer::cardsReceived(const PlayerId *playerId, unsigned int cardsAmount)
+void GameTest::Observer::cardsDealed(const PlayerId *playerId, unsigned int cardsAmount)
 {
     mPlayersCards[playerId] += cardsAmount;
     mGameCardsCount -= cardsAmount;
+}
+
+void GameTest::Observer::roundStarted(unsigned int roundIndex, const std::vector<const PlayerId *> attackers, const PlayerId *defender)
+{
+    CPPUNIT_ASSERT(mCurrentRoundIndex != roundIndex);
+    mCurrentRoundIndex = roundIndex;
+    CPPUNIT_ASSERT(!mCurrentRoundData);
+    mCurrentRoundData = new RoundData();
+    std::copy(attackers.begin(), attackers.end(), std::inserter(mCurrentRoundData->mPlayers, mCurrentRoundData->mPlayers.begin()));
+    mCurrentRoundData->mPlayers.push_back(defender);
+}
+
+void GameTest::Observer::roundEnded(unsigned int roundIndex)
+{
+    CPPUNIT_ASSERT(mCurrentRoundIndex == roundIndex);
+    mRoundsData.push_back(mCurrentRoundData);
+    mCurrentRoundData = NULL;
 }
 
 void GameTest::TestPlayer0::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> players)
@@ -260,14 +356,14 @@ void GameTest::TestPlayer0::cardsDropped(const PlayerId *playerId, const CardSet
     Observer::cardsDropped(playerId, cardSet);
 }
 
-void GameTest::TestPlayer0::cardsReceived(const PlayerId *playerId, const CardSet &cardSet)
+void GameTest::TestPlayer0::cardsPickedUp(const PlayerId *playerId, const CardSet &cardSet)
 {
-    Observer::cardsReceived(playerId, cardSet);
+    Observer::cardsPickedUp(playerId, cardSet);
 }
 
-void GameTest::TestPlayer0::cardsReceived(const PlayerId *playerId, unsigned int cardsAmount)
+void GameTest::TestPlayer0::cardsDealed(const PlayerId *playerId, unsigned int cardsAmount)
 {
-    Observer::cardsReceived(playerId, cardsAmount);
+    Observer::cardsDealed(playerId, cardsAmount);
 }
 
 void GameTest::TestPlayer0::updateCards(const Card *card)
@@ -275,4 +371,15 @@ void GameTest::TestPlayer0::updateCards(const Card *card)
     CardSet currentCards = *(mPlayerCards.end() - 1);
     CPPUNIT_ASSERT(currentCards.erase(*card));
     mPlayerCards.push_back(currentCards);
+}
+
+
+void GameTest::TestPlayer0::roundStarted(unsigned int roundIndex, const std::vector<const PlayerId *> attackers, const PlayerId *defender)
+{
+    Observer::roundStarted(roundIndex, attackers, defender);
+}
+
+void GameTest::TestPlayer0::roundEnded(unsigned int roundIndex)
+{
+    Observer::roundEnded(roundIndex);
 }

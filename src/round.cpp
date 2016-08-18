@@ -22,7 +22,7 @@ Round::Round(const std::vector<const PlayerId*>& attackers,
 {
 }
 
-void Round::play()
+bool Round::play()
 {
     // deal cards
     dealCards();
@@ -98,7 +98,7 @@ void Round::play()
             // invalid card returned - the card is not from attackCards
             if (attackCards.empty()) {
                 // very unexpected
-                return;
+                break;
             }
             // take any card
             attackCard = *attackCards.begin();
@@ -121,7 +121,7 @@ void Round::play()
             defenderCards.insert(tableCards.all().begin(), tableCards.all().end());
             defender.cardsUpdated(defenderCards);
             std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsReceivedNotification(mDefender, tableCards.all()));
-            return;
+            return false;
         } else {
             tableCards.addDefendCard(*defendCardPtr);
             defenderCards.erase(*defendCardPtr);
@@ -133,6 +133,8 @@ void Round::play()
             break;
         }
     }
+
+    return true;
 }
 
 void Round::dealCards()
@@ -177,7 +179,7 @@ Round::CardsAmountReceivedNotification::CardsAmountReceivedNotification(const Pl
 
 void Round::CardsAmountReceivedNotification::operator()(GameObserver* observer)
 {
-    observer->cardsReceived(mPlayerId, mCardsReceived);
+    observer->cardsDealed(mPlayerId, mCardsReceived);
 }
 
 Round::CardsDroppedNotification::CardsDroppedNotification(const PlayerId *playerId, const Card &droppedCard)
@@ -199,7 +201,7 @@ Round::CardsReceivedNotification::CardsReceivedNotification(const PlayerId *play
 
 void Round::CardsReceivedNotification::operator()(GameObserver *observer)
 {
-    observer->cardsReceived(mPlayerId, mReceivedCards);
+    observer->cardsPickedUp(mPlayerId, mReceivedCards);
 }
 
 

@@ -33,17 +33,29 @@ public:
      */
     virtual void gameStarted(const Suit& trumpSuit, const CardSet& cardSet, const std::vector<const PlayerId*> players) = 0;
     /**
+     * @brief New round started
+     * @param roundIndex index of the started round
+     * @param attackers list of attackers' ids
+     * @param defender defender's id
+     */
+    virtual void roundStarted(unsigned int roundIndex, const std::vector<const PlayerId*> attackers, const PlayerId* defender) = 0;
+    /**
+     * @brief Current round ended
+     * @param roundIndex index of the ended round
+     */
+    virtual void roundEnded(unsigned int roundIndex) = 0;
+    /**
      * @brief Some player picked up cards (defend failed)
      * @param playerId player id
      * @param cardSet cards
      */
-    virtual void cardsReceived(const PlayerId* playerId, const CardSet& cardSet) = 0;
+    virtual void cardsPickedUp(const PlayerId* playerId, const CardSet& cardSet) = 0;
     /**
      * @brief Some player received card from the deck
      * @param playerId player
      * @param cardsAmount cards amount
      */
-    virtual void cardsReceived(const PlayerId* playerId, unsigned int cardsAmount) = 0;
+    virtual void cardsDealed(const PlayerId* playerId, unsigned int cardsAmount) = 0;
     /**
      * @brief Cards left game
      * @param cardSet cards

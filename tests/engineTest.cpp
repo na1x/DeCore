@@ -65,13 +65,13 @@ void EngineTest::TestPlayer::cardsDropped(const PlayerId *playerId, const CardSe
     (void)playerId;
 }
 
-void EngineTest::TestPlayer::cardsReceived(const PlayerId *playerId, const CardSet &cardSet)
+void EngineTest::TestPlayer::cardsPickedUp(const PlayerId *playerId, const CardSet &cardSet)
 {
     (void)cardSet;
     (void)playerId;
 }
 
-void EngineTest::TestPlayer::cardsReceived(const PlayerId *playerId, unsigned int cardsAmount)
+void EngineTest::TestPlayer::cardsDealed(const PlayerId *playerId, unsigned int cardsAmount)
 {
     (void)cardsAmount;
     (void)playerId;
@@ -104,4 +104,17 @@ const Card *EngineTest::TestPlayer::defend(const PlayerId *playerId, const Card&
 void EngineTest::TestPlayer::cardsUpdated(const CardSet &cardSet)
 {
     (void)cardSet;
+}
+
+
+void EngineTest::TestPlayer::roundStarted(unsigned int roundIndex, const std::vector<const PlayerId *> attackers, const PlayerId *defender)
+{
+    (void) roundIndex;
+    (void) attackers;
+    (void) defender;
+}
+
+void EngineTest::TestPlayer::roundEnded(unsigned int roundIndex)
+{
+    (void) roundIndex;
 }

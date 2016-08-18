@@ -23,8 +23,10 @@ private:
         void gameStarted(const decore::Suit &trumpSuit, const decore::CardSet &cardSet, const std::vector<const decore::PlayerId *> players);
         void cardsLeft(const decore::CardSet &cardSet);
         void cardsDropped(const decore::PlayerId *playerId, const decore::CardSet &cardSet);
-        void cardsReceived(const decore::PlayerId* playerId, const decore::CardSet& cardSet);
-        void cardsReceived(const decore::PlayerId* playerId, unsigned int cardsAmount);
+        void cardsPickedUp(const decore::PlayerId* playerId, const decore::CardSet& cardSet);
+        void cardsDealed(const decore::PlayerId* playerId, unsigned int cardsAmount);
+        void roundStarted(unsigned int roundIndex, const std::vector<const decore::PlayerId *> attackers, const decore::PlayerId *defender);
+        void roundEnded(unsigned int roundIndex);
 
         void idCreated(const decore::PlayerId *id);
         const decore::Card &attack(const decore::PlayerId *playerId, const decore::CardSet &cardSet);

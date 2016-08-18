@@ -21,6 +21,7 @@ Engine::Engine()
     : mDeck(NULL)
     , mPlayerIdCounter(0)
     , mCurrentPlayer(NULL)
+    , mRoundIndex(0)
 {
 }
 
@@ -114,7 +115,19 @@ bool Engine::playRound()
         attackers.push_back(attacker);
     }
 
-    Round(attackers, defender, mPlayers, mGameObservers, *mDeck, mPlayersCards).play();
+    Round round(attackers, defender, mPlayers, mGameObservers, *mDeck, mPlayersCards);
+
+    std::for_each(mGameObservers.begin(), mGameObservers.end(), RoundStartNotification(attackers, defender, mRoundIndex));
+
+    bool defended = round.play();
+
+    std::for_each(mGameObservers.begin(), mGameObservers.end(), RoundEndNotification(mRoundIndex));
+
+    mRoundIndex++;
+
+    // if attack failed "next move" goes to defender
+    // or to next player after the defender overwise
+    mCurrentPlayer = defended ? defender : Rules::pickNext(mGeneratedIds, defender);
 
     return !gameEnded();
 }
@@ -152,6 +165,30 @@ Engine::GameStartNotification::GameStartNotification(const Suit &trumpSuit, cons
 void Engine::GameStartNotification::operator()(GameObserver*observer)
 {
     observer->gameStarted(mTrumpSuit, mGameCards, mPlayers);
+}
+
+Engine::RoundStartNotification::RoundStartNotification(const std::vector<const PlayerId *> &attackers, const PlayerId *defender, unsigned int roundIndex)
+    : mAttackers(attackers)
+    , mDefender(defender)
+    , mRoundIndex(roundIndex)
+{
+
+}
+
+void Engine::RoundStartNotification::operator()(GameObserver *observer)
+{
+    observer->roundStarted(mRoundIndex, mAttackers, mDefender);
+}
+
+Engine::RoundEndNotification::RoundEndNotification(unsigned int roundIndex)
+    : mRoundIndex(roundIndex)
+{
+}
+
+void Engine::RoundEndNotification::operator()(GameObserver *observer)
+{
+    observer->roundEnded(mRoundIndex);
+
 }
 
 }

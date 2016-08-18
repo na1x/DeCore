@@ -65,8 +65,9 @@ public:
 
     /**
      * @brief Plays round
+     * @return true if defend is succeeded
      */
-    void play();
+    bool play();
 
 private:
 

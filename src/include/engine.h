@@ -72,6 +72,11 @@ class Engine
      */
     const PlayerId* mCurrentPlayer;
 
+    /**
+     * @brief Round index
+     */
+    unsigned int mRoundIndex;
+
 public:
     /**
      * @brief Ctor
@@ -127,6 +132,26 @@ private:
 
     public:
         GameStartNotification(const Suit& trumpSuit, const std::vector<const PlayerId*>& players, const CardSet& gameCards);
+        void operator()(GameObserver* observer);
+    };
+
+    class RoundStartNotification
+    {
+        const std::vector<const PlayerId*>& mAttackers;
+        const PlayerId* mDefender;
+        const unsigned int mRoundIndex;
+
+    public:
+        RoundStartNotification(const std::vector<const PlayerId*>& attackers, const PlayerId* defender, unsigned int roundIndex);
+        void operator()(GameObserver* observer);
+    };
+
+    class RoundEndNotification
+    {
+        const unsigned int mRoundIndex;
+
+    public:
+        RoundEndNotification(unsigned int roundIndex);
         void operator()(GameObserver* observer);
     };
 
