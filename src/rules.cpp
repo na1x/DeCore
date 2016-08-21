@@ -112,6 +112,11 @@ bool Rules::deal(Deck& deck, const std::vector<CardSet*> &cards)
     return cardsAmount != deck.size();
 }
 
+unsigned int Rules::maxAttackCards(unsigned int defenderCardsAmount)
+{
+    return std::min(defenderCardsAmount, MAX_PLAYER_CARDS);
+}
+
 
 }
 

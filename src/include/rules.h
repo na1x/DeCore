@@ -52,6 +52,13 @@ public:
      * @return true if any card set is updated
      */
     static bool deal(Deck &deck, const std::vector<CardSet *> &cards);
+
+    /**
+     * @brief Returns max amount of attack cards allowed
+     * @param defenderCardsAmount number of cards which defender has
+     * @return number of the cards
+     */
+    static unsigned int maxAttackCards(unsigned int defenderCardsAmount);
 };
 
 }

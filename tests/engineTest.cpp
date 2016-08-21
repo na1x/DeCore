@@ -30,6 +30,13 @@ void EngineTest::testAddPlayers()
         CPPUNIT_ASSERT(playerIds.insert(added).second);
         playerPtr++;
     }
+
+    // cleanup
+    playerPtr = players;
+    while(*playerPtr) {
+        delete *playerPtr;
+        playerPtr++;
+    }
 }
 
 void EngineTest::testAddDuplicatedPlayers()

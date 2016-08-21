@@ -11,6 +11,12 @@ class GameTest: public CppUnit::TestFixture
     CPPUNIT_TEST(testInitialization);
     CPPUNIT_TEST(testOneRound00);
     CPPUNIT_TEST(testOneRound01);
+    CPPUNIT_TEST(testOneRound02);
+    CPPUNIT_TEST(testOneRound03);
+    CPPUNIT_TEST(testDraw00);
+    CPPUNIT_TEST(testThreePlayers00);
+    CPPUNIT_TEST(testPitch00);
+    CPPUNIT_TEST(testPitch01);
     CPPUNIT_TEST(testMoveTransfer00);
     CPPUNIT_TEST_SUITE_END();
 
@@ -18,6 +24,12 @@ public:
     void testInitialization();
     void testOneRound00();
     void testOneRound01();
+    void testOneRound02();
+    void testOneRound03();
+    void testDraw00();
+    void testThreePlayers00();
+    void testPitch00();
+    void testPitch01();
     void testMoveTransfer00();
 
 private:

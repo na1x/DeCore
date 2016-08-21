@@ -209,8 +209,251 @@ void GameTest::testOneRound01()
         CPPUNIT_ASSERT(observer.mPlayersCards[player.mId] == player.mPlayerCards[player.mPlayerCards.size() - 1].size());
     }
 
-    // deck has for player0 and player1 to play the round without pitch from player2
+    // deck has cards for player0 and player1 to play the round without pitch from player2
     CPPUNIT_ASSERT(1 == player2.mPlayerCards.size());
+}
+
+void GameTest::testOneRound02()
+{
+    // attacker has 2 cards, and goes with trump (due to CardSet sort order)
+    // player two picks card
+    // game ended on second round - player one goes with SUIT_CLUBS, RANK_6
+    // player two beats and loses with one card remained
+    Engine engine;
+    TestPlayer0 player0, player1;
+
+    std::vector<TestPlayer0*> players;
+    players.push_back(&player0);
+    players.push_back(&player1);
+
+    std::vector<const PlayerId*> playerIds;
+    for(std::vector<TestPlayer0*>::iterator it = players.begin(); it != players.end(); ++ it) {
+        playerIds.push_back(engine.add(**it));
+    }
+
+    Deck deck;
+
+    deck.push_back(Card(SUIT_CLUBS, RANK_6));
+    deck.push_back(Card(SUIT_CLUBS, RANK_7));
+    deck.push_back(Card(SUIT_SPADES, RANK_6));
+
+    CPPUNIT_ASSERT(engine.setDeck(deck));
+
+    CPPUNIT_ASSERT(engine.playRound());
+    CPPUNIT_ASSERT(!engine.playRound());
+    CPPUNIT_ASSERT(engine.getLoser() == player1.mId);
+    CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->empty());
+    CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->size() == 1);
+}
+
+void GameTest::testOneRound03()
+{
+    // attacker has 2 cards, defender has one card
+    // defender beats
+    // attacker left with one card
+    Engine engine;
+    TestPlayer0 player0, player1;
+
+    std::vector<TestPlayer0*> players;
+    players.push_back(&player0);
+    players.push_back(&player1);
+
+    std::vector<const PlayerId*> playerIds;
+    for(std::vector<TestPlayer0*>::iterator it = players.begin(); it != players.end(); ++ it) {
+        playerIds.push_back(engine.add(**it));
+    }
+
+    Deck deck;
+
+    deck.push_back(Card(SUIT_SPADES, RANK_6));
+    deck.push_back(Card(SUIT_SPADES, RANK_7));
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_6));
+
+    CPPUNIT_ASSERT(engine.setDeck(deck));
+
+    CPPUNIT_ASSERT(!engine.playRound());
+    CPPUNIT_ASSERT(engine.getLoser() == player0.mId);
+    CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->size() == 1);
+    CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->empty());
+}
+
+void GameTest::testDraw00()
+{
+    Engine engine;
+    TestPlayer0 player0, player1;
+
+    std::vector<TestPlayer0*> players;
+    players.push_back(&player0);
+    players.push_back(&player1);
+
+    std::vector<const PlayerId*> playerIds;
+    for(std::vector<TestPlayer0*>::iterator it = players.begin(); it != players.end(); ++ it) {
+        playerIds.push_back(engine.add(**it));
+    }
+
+    Deck deck;
+
+    deck.push_back(Card(SUIT_SPADES, RANK_6));
+    deck.push_back(Card(SUIT_SPADES, RANK_7));
+
+    CPPUNIT_ASSERT(engine.setDeck(deck));
+
+    CPPUNIT_ASSERT(!engine.playRound());
+    CPPUNIT_ASSERT(!engine.getLoser());
+    CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->empty());
+    CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->empty());
+}
+
+void GameTest::testThreePlayers00()
+{
+    // three players, play one round
+    // both player0 and player2 attacks
+    // player1 defends
+    Engine engine;
+    TestPlayer0 player0, player1, player2;
+
+    std::vector<TestPlayer0*> players;
+    players.push_back(&player0);
+    players.push_back(&player1);
+    players.push_back(&player2);
+
+    std::vector<const PlayerId*> playerIds;
+    for(std::vector<TestPlayer0*>::iterator it = players.begin(); it != players.end(); ++ it) {
+        playerIds.push_back(engine.add(**it));
+    }
+
+    Deck deck;
+
+    deck.push_back(Card(SUIT_SPADES, RANK_6));
+    deck.push_back(Card(SUIT_SPADES, RANK_7));
+    deck.push_back(Card(SUIT_SPADES, RANK_9));
+
+    deck.push_back(Card(SUIT_HEARTS, RANK_6));
+    deck.push_back(Card(SUIT_HEARTS, RANK_7));
+    deck.push_back(Card(SUIT_HEARTS, RANK_9));
+
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_6));
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_9));
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_10));
+
+    deck.push_back(Card(SUIT_SPADES, RANK_8));
+    deck.push_back(Card(SUIT_SPADES, RANK_10));
+    deck.push_back(Card(SUIT_SPADES, RANK_JACK));
+
+    deck.push_back(Card(SUIT_HEARTS, RANK_6));
+    deck.push_back(Card(SUIT_HEARTS, RANK_10));
+    deck.push_back(Card(SUIT_HEARTS, RANK_JACK));
+
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_JACK));
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_QUEEN));
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_KING));
+
+    deck.push_back(Card(SUIT_CLUBS, RANK_ACE));
+
+    CPPUNIT_ASSERT(engine.setDeck(deck));
+
+    CPPUNIT_ASSERT(engine.playRound());
+
+    // one deal + three attacks
+    CPPUNIT_ASSERT(player0.mPlayerCards.size() == 4);
+    // one deal + six defends
+    CPPUNIT_ASSERT(player1.mPlayerCards.size() == 7);
+    // one deal + three attacks
+    CPPUNIT_ASSERT(player2.mPlayerCards.size() == 4);
+
+    CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->size() == 3);
+    CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->empty());
+    CPPUNIT_ASSERT((player2.mPlayerCards.end() - 1)->size() == 3);
+}
+
+void GameTest::testPitch00()
+{
+    // attacker has three cards for the first move
+    // defender has no cards to beat first card
+    // ensure that attacker is allowed to pitch all cards
+    Engine engine;
+    TestPlayer0 player0, player1;
+
+    std::vector<TestPlayer0*> players;
+    players.push_back(&player0);
+    players.push_back(&player1);
+
+    std::vector<const PlayerId*> playerIds;
+    for(std::vector<TestPlayer0*>::iterator it = players.begin(); it != players.end(); ++ it) {
+        playerIds.push_back(engine.add(**it));
+    }
+
+    Deck deck;
+
+    deck.push_back(Card(SUIT_SPADES, RANK_7));
+    deck.push_back(Card(SUIT_SPADES, RANK_6));
+
+    deck.push_back(Card(SUIT_HEARTS, RANK_7));
+    deck.push_back(Card(SUIT_HEARTS, RANK_6));
+
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_7));
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_6));
+
+    deck.push_back(Card(SUIT_CLUBS, RANK_ACE));
+
+    CPPUNIT_ASSERT(engine.setDeck(deck));
+
+    CPPUNIT_ASSERT(engine.playRound());
+
+    // deal and three attacks
+    CPPUNIT_ASSERT(player0.mPlayerCards.size() == 4);
+    // deal and one pick up
+    CPPUNIT_ASSERT(player1.mPlayerCards.size() == 2);
+
+    CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->size() == 1);
+    CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->size() == 6);
+}
+
+void GameTest::testPitch01()
+{
+    Engine engine;
+    TestPlayer0 player0, player1, player2;
+
+    std::vector<TestPlayer0*> players;
+    players.push_back(&player0);
+    players.push_back(&player1);
+    players.push_back(&player2);
+
+    std::vector<const PlayerId*> playerIds;
+    for(std::vector<TestPlayer0*>::iterator it = players.begin(); it != players.end(); ++ it) {
+        playerIds.push_back(engine.add(**it));
+    }
+
+    Deck deck;
+
+    deck.push_back(Card(SUIT_SPADES, RANK_7));
+    deck.push_back(Card(SUIT_SPADES, RANK_8));
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_7));
+
+    deck.push_back(Card(SUIT_HEARTS, RANK_7));
+    deck.push_back(Card(SUIT_HEARTS, RANK_6));
+    deck.push_back(Card(SUIT_HEARTS, RANK_8));
+
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_9));
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_6));
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_8));
+
+    deck.push_back(Card(SUIT_CLUBS, RANK_ACE));
+
+    CPPUNIT_ASSERT(engine.setDeck(deck));
+
+    CPPUNIT_ASSERT(engine.playRound());
+
+    // deal and two attacks
+    CPPUNIT_ASSERT(player0.mPlayerCards.size() == 3);
+    // deal + defend + one pick up
+    CPPUNIT_ASSERT(player1.mPlayerCards.size() == 3);
+    // deal and one pitch
+    CPPUNIT_ASSERT(player2.mPlayerCards.size() == 2);
+
+    CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->size() == 2);
+    CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->size() == 6);
+    CPPUNIT_ASSERT((player2.mPlayerCards.end() - 1)->size() == 2);
 }
 
 static bool checkCard(const CardSet& set, const Card& card)
@@ -258,7 +501,9 @@ void GameTest::testMoveTransfer00()
     CPPUNIT_ASSERT(1 == round0.mPickedUpCards.size());
     CPPUNIT_ASSERT(checkCard(round0.mPickedUpCards.at(playerIds[1]), deck[0]));
 
-    CPPUNIT_ASSERT(engine.playRound());
+    CPPUNIT_ASSERT(!engine.playRound());
+
+    CPPUNIT_ASSERT(engine.getLoser() == player1.mId);
 
     CPPUNIT_ASSERT(2 == player0.mRoundsData.size());
 

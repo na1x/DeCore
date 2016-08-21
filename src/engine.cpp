@@ -132,6 +132,17 @@ bool Engine::playRound()
     return !gameEnded();
 }
 
+const PlayerId *Engine::getLoser()
+{
+    std::vector<const PlayerId*> playersWithCards;
+    for(std::map<const PlayerId*, CardSet>::const_iterator it = mPlayersCards.begin(); it != mPlayersCards.end(); ++it) {
+        if(!it->second.empty()) {
+            playersWithCards.push_back(it->first);
+        }
+    }
+    return playersWithCards.empty() ? NULL : 1 == playersWithCards.size() ? playersWithCards[0] : NULL;
+}
+
 void Engine::addGameObserver(GameObserver &observer)
 {
     mGameObservers.push_back(&observer);
@@ -141,7 +152,6 @@ bool Engine::gameEnded() const
 {
     // check no game cards left
     // check that less than one player have cards
-
     if (!mDeck->empty()) {
         return false;
     }
@@ -153,7 +163,7 @@ bool Engine::gameEnded() const
         }
     }
 
-    return !playersWithCards;
+    return playersWithCards < 2;
 }
 
 Engine::GameStartNotification::GameStartNotification(const Suit &trumpSuit, const std::vector<const PlayerId *> &players, const CardSet &gameCards)

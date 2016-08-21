@@ -121,6 +121,13 @@ public:
      * @return true if game is not ended and one more round could be played
      */
     bool playRound();
+    /**
+     * @brief Returns loser (only player with cards) or `NULL` in case of draw(no loser)
+     *
+     * Valid only if game ended.
+     * @return loser id or `NULL` if draw or game not ended yet
+     */
+    const PlayerId* getLoser();
 
 private:
 

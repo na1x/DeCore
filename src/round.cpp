@@ -53,6 +53,10 @@ bool Round::play()
         {
             return mAll.empty();
         }
+        unsigned int attackCards() const
+        {
+            return mAttackCards.size();
+        }
     } tableCards;
 
     const PlayerId* currentAttackerId = mAttackers[0];
@@ -64,7 +68,17 @@ bool Round::play()
 
     unsigned int passedCounter = 0;
 
+    bool defendFailed = false;
+
+    unsigned int maxAttackCards = Rules::maxAttackCards(defenderCards.size());
+
     for (;;) {
+
+        if (tableCards.attackCards() == maxAttackCards) {
+            // defender has no more cards - defend succeeded
+            break;
+        }
+
         attackCards = Rules::getAttackCards(tableCards.all(), mPlayersCards[currentAttackerId]);
 
         Player& currentAttacker = *mPlayers[currentAttackerId];
@@ -86,7 +100,7 @@ bool Round::play()
             }
 
             if (++passedCounter == mAttackers.size()) {
-                // all attackers "passed" - defend succeeded
+                // all attackers "passed"
                 break;
             }
             continue;
@@ -118,23 +132,21 @@ bool Round::play()
 
         if(noCardsToDefend || userGrabbedCards || invalidDefendCard) {
             // defend failed
-            defenderCards.insert(tableCards.all().begin(), tableCards.all().end());
-            defender.cardsUpdated(defenderCards);
-            std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsReceivedNotification(mDefender, tableCards.all()));
-            return false;
+            defendFailed = true;
         } else {
             tableCards.addDefendCard(*defendCardPtr);
             defenderCards.erase(*defendCardPtr);
             std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsDroppedNotification(mDefender, *defendCardPtr));
         }
-
-        if (defenderCards.empty()) {
-            // defender has no more cards - defend succeeded
-            break;
-        }
     }
 
-    return true;
+    if (defendFailed) {
+        defenderCards.insert(tableCards.all().begin(), tableCards.all().end());
+        defender.cardsUpdated(defenderCards);
+        std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsReceivedNotification(mDefender, tableCards.all()));
+    }
+
+    return !defendFailed;
 }
 
 void Round::dealCards()
