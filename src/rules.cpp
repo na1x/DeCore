@@ -8,21 +8,15 @@ namespace decore {
 
 const unsigned int MAX_PLAYER_CARDS = 6;
 
-class AttackCardFilter
-{
-    const CardSet& mPlayerCards;
-    CardSet& mResult;
-public:
-    AttackCardFilter(const CardSet& playerCards, CardSet& result)
-        : mPlayerCards(playerCards)
-        , mResult(result)
-    {}
+Rules::AttackCardFilter::AttackCardFilter(const CardSet& playerCards, CardSet& result)
+    : mPlayerCards(playerCards)
+    , mResult(result)
+{}
 
-    void operator()(const Card& tableCard)
-    {
-        mPlayerCards.getCards(tableCard.rank(), mResult);
-    }
-};
+void Rules::AttackCardFilter::operator()(const Card& tableCard)
+{
+    mPlayerCards.getCards(tableCard.rank(), mResult);
+}
 
 CardSet Rules::getAttackCards(const CardSet& tableCards, const CardSet& playerCards)
 {
@@ -35,32 +29,24 @@ CardSet Rules::getAttackCards(const CardSet& tableCards, const CardSet& playerCa
     return result;
 }
 
-class DefendCardFilter
+Rules::DefendCardFilter::DefendCardFilter(const Card& cardToBeat, const Suit& trump, CardSet& result)
+    : mCardToBeat(cardToBeat)
+    , mTrump(trump)
+    , mResult(result)
+{}
+
+void Rules::DefendCardFilter::operator()(const Card& playerCard)
 {
-    const Card& mCardToBeat;
-    const Suit& mTrump;
-    CardSet& mResult;
-
-public:
-    DefendCardFilter(const Card& cardToBeat, const Suit& trump, CardSet& result)
-        : mCardToBeat(cardToBeat)
-        , mTrump(trump)
-        , mResult(result)
-    {}
-
-    void operator()(const Card& playerCard)
-    {
-        if (mCardToBeat.suit() == playerCard.suit()) {
-            // if suits are equal - take highest card
-            if (mCardToBeat.rank() < playerCard.rank()) {
-                mResult.insert(playerCard);
-            }
-        } else if (playerCard.suit() == mTrump) {
-            // if player card is a trump - take it
+    if (mCardToBeat.suit() == playerCard.suit()) {
+        // if suits are equal - take highest card
+        if (mCardToBeat.rank() < playerCard.rank()) {
             mResult.insert(playerCard);
         }
+    } else if (playerCard.suit() == mTrump) {
+        // if player card is a trump - take it
+        mResult.insert(playerCard);
     }
-};
+}
 
 CardSet Rules::getDefendCards(const Card &card, const CardSet &playerCards, const Suit &trumpSuit)
 {
@@ -116,7 +102,6 @@ unsigned int Rules::maxAttackCards(unsigned int defenderCardsAmount)
 {
     return std::min(defenderCardsAmount, MAX_PLAYER_CARDS);
 }
-
 
 }
 

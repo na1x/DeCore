@@ -59,6 +59,33 @@ public:
      * @return number of the cards
      */
     static unsigned int maxAttackCards(unsigned int defenderCardsAmount);
+
+private:
+    /**
+     * @brief Function for std::for_each
+     */
+    class DefendCardFilter
+    {
+        const Card& mCardToBeat;
+        const Suit& mTrump;
+        CardSet& mResult;
+
+    public:
+        DefendCardFilter(const Card& cardToBeat, const Suit& trump, CardSet& result);
+        void operator()(const Card& playerCard);
+    };
+
+    /**
+     * @brief Function for std::for_each
+     */
+    class AttackCardFilter
+    {
+        const CardSet& mPlayerCards;
+        CardSet& mResult;
+    public:
+        AttackCardFilter(const CardSet& playerCards, CardSet& result);
+        void operator()(const Card& tableCard);
+    };
 };
 
 }

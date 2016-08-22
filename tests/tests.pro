@@ -12,6 +12,8 @@ TARGET = tests
 CONFIG   += console
 CONFIG   -= app_bundle
 
+QMAKE_CXXFLAGS += -Wall -Wextra
+
 INCLUDEPATH +=  include
 
 TEMPLATE = app

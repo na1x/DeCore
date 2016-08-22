@@ -8,15 +8,6 @@
 
 namespace decore {
 
-class PlayerIdImplementation: public PlayerId
-{
-    const int mId;
-public:
-    PlayerIdImplementation(int id)
-        : mId(id)
-    {}
-};
-
 Engine::Engine()
     : mDeck(NULL)
     , mPlayerIdCounter(0)
@@ -166,11 +157,16 @@ bool Engine::gameEnded() const
     return playersWithCards < 2;
 }
 
+Engine::PlayerIdImplementation::PlayerIdImplementation(unsigned int id)
+    : mId(id)
+{}
+
 Engine::GameStartNotification::GameStartNotification(const Suit &trumpSuit, const std::vector<const PlayerId *> &players, const CardSet &gameCards)
     : mTrumpSuit(trumpSuit)
     , mPlayers(players)
     , mGameCards(gameCards)
 {}
+
 
 void Engine::GameStartNotification::operator()(GameObserver*observer)
 {

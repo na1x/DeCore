@@ -10,6 +10,8 @@ TARGET = decore
 TEMPLATE = lib
 CONFIG += staticlib
 
+QMAKE_CXXFLAGS += -Wall -Wextra
+
 INCLUDEPATH += src/include
 
 SOURCES += \

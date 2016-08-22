@@ -131,6 +131,24 @@ public:
 
 private:
 
+    /**
+     * @brief Internal implementation of PlayerId
+     *
+     * Note: id should be unique during one game.
+     */
+    class PlayerIdImplementation: public PlayerId
+    {
+        /**
+         * Id index
+         */
+        const unsigned int mId;
+    public:
+        PlayerIdImplementation(unsigned int id);
+    };
+
+    /**
+     * @brief Function for std::for_each
+     */
     class GameStartNotification
     {
         const Suit& mTrumpSuit;
@@ -142,6 +160,9 @@ private:
         void operator()(GameObserver* observer);
     };
 
+    /**
+     * @brief Function for std::for_each
+     */
     class RoundStartNotification
     {
         const std::vector<const PlayerId*>& mAttackers;
@@ -153,6 +174,9 @@ private:
         void operator()(GameObserver* observer);
     };
 
+    /**
+     * @brief Function for std::for_each
+     */
     class RoundEndNotification
     {
         const unsigned int mRoundIndex;
