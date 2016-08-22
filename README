@@ -9,7 +9,6 @@ Building library:
 
 Building tests (is not required for the users though):
 	cd tests && qmake tests.pro && make
-	but be ready to update paths in the tests/tests.pro to link properly with libdecore.
 
 Building doxygen documentation:
 	doxygen doxygen.cfg
