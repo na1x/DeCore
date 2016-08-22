@@ -2,6 +2,7 @@
 #define GAMEOBSERVER_H_INCLUDED
 
 #include <suit.h>
+#include <vector>
 
 namespace decore
 {
@@ -31,7 +32,7 @@ public:
      * @param cardSet full game card set
      * @param players players in the game
      */
-    virtual void gameStarted(const Suit& trumpSuit, const CardSet& cardSet, const std::vector<const PlayerId*> players) = 0;
+    virtual void gameStarted(const Suit& trumpSuit, const CardSet& cardSet, const std::vector<const PlayerId*>& players) = 0;
     /**
      * @brief New round started
      * @param roundIndex index of the started round

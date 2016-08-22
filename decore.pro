@@ -18,7 +18,8 @@ SOURCES += \
     src/engine.cpp \
     src/round.cpp \
     src/rules.cpp \
-    src/deck.cpp
+    src/deck.cpp \
+    src/gameCardsTracker.cpp
 
 HEADERS += \
     src/include/card.h \
@@ -31,4 +32,5 @@ HEADERS += \
     src/include/rank.h \
     src/include/suit.h \
     src/include/rules.h \
-    src/include/deck.h
+    src/include/deck.h \
+    src/include/gameCardsTracker.h

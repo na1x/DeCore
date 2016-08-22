@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <algorithm>
+#include <cassert>
 
 #include "round.h"
 #include "rules.h"
@@ -110,10 +111,7 @@ bool Round::play()
 
         if(!attackCards.erase(attackCard)) {
             // invalid card returned - the card is not from attackCards
-            if (attackCards.empty()) {
-                // very unexpected
-                break;
-            }
+            assert(!attackCards.empty());
             // take any card
             attackCard = *attackCards.begin();
         }

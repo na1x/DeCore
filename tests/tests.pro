@@ -36,11 +36,11 @@ INCLUDEPATH += $$PWD/../src/include
 DEPENDPATH += $$PWD/../src/include
 
 CONFIG(debug, release | debug) {
-    LIBS += -L$$PWD/../../build-decore-debug/ -ldecore
-    PRE_TARGETDEPS += $$PWD/../../build-decore-debug/libdecore.a
+    LIBS += -L$$PWD/.. -ldecore
+    PRE_TARGETDEPS += $$PWD/../libdecore.a
 }
 
 CONFIG(release, release | debug) {
-    LIBS += -L$$PWD/../../build-decore-release/ -ldecore
-    PRE_TARGETDEPS += $$PWD/../../build-decore-release/libdecore.a
+    LIBS += -L$$PWD/.. -ldecore
+    PRE_TARGETDEPS += $$PWD/../libdecore.a
 }

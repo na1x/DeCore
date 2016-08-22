@@ -20,7 +20,7 @@ private:
     public:
         std::vector<const decore::PlayerId*> mIds;
 
-        void gameStarted(const decore::Suit &trumpSuit, const decore::CardSet &cardSet, const std::vector<const decore::PlayerId *> players);
+        void gameStarted(const decore::Suit &trumpSuit, const decore::CardSet &cardSet, const std::vector<const decore::PlayerId *>& players);
         void cardsLeft(const decore::CardSet &cardSet);
         void cardsDropped(const decore::PlayerId *playerId, const decore::CardSet &cardSet);
         void cardsPickedUp(const decore::PlayerId* playerId, const decore::CardSet& cardSet);

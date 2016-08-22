@@ -54,7 +54,7 @@ void EngineTest::testAddDuplicatedPlayers()
 
 
 
-void EngineTest::TestPlayer::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> players)
+void EngineTest::TestPlayer::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> &players)
 {
     (void)trumpSuit;
     (void)cardSet;

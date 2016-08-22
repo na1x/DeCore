@@ -3,6 +3,7 @@
 #include "player.h"
 #include "deck.h"
 #include "defines.h"
+#include "gameCardsTracker.h"
 
 using namespace decore;
 
@@ -282,6 +283,8 @@ void GameTest::testDraw00()
     Engine engine;
     TestPlayer0 player0, player1;
 
+    GameCardsTracker cardTracker;
+
     std::vector<TestPlayer0*> players;
     players.push_back(&player0);
     players.push_back(&player1);
@@ -296,12 +299,18 @@ void GameTest::testDraw00()
     deck.push_back(Card(SUIT_SPADES, RANK_6));
     deck.push_back(Card(SUIT_SPADES, RANK_7));
 
+    engine.addGameObserver(cardTracker);
+
     CPPUNIT_ASSERT(engine.setDeck(deck));
 
     CPPUNIT_ASSERT(!engine.playRound());
     CPPUNIT_ASSERT(!engine.getLoser());
     CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->empty());
     CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->empty());
+
+    CPPUNIT_ASSERT(cardTracker.playerCards(player0.mId).empty());
+    CPPUNIT_ASSERT(cardTracker.playerCards(player1.mId).empty());
+    CPPUNIT_ASSERT(!cardTracker.deckCards());
 }
 
 void GameTest::testThreePlayers00()
@@ -322,6 +331,10 @@ void GameTest::testThreePlayers00()
         playerIds.push_back(engine.add(**it));
     }
 
+    GameCardsTracker gameCardsTracker;
+
+    engine.addGameObserver(gameCardsTracker);
+
     Deck deck;
 
     deck.push_back(Card(SUIT_SPADES, RANK_6));
@@ -340,7 +353,7 @@ void GameTest::testThreePlayers00()
     deck.push_back(Card(SUIT_SPADES, RANK_10));
     deck.push_back(Card(SUIT_SPADES, RANK_JACK));
 
-    deck.push_back(Card(SUIT_HEARTS, RANK_6));
+    deck.push_back(Card(SUIT_HEARTS, RANK_ACE));
     deck.push_back(Card(SUIT_HEARTS, RANK_10));
     deck.push_back(Card(SUIT_HEARTS, RANK_JACK));
 
@@ -351,6 +364,8 @@ void GameTest::testThreePlayers00()
     deck.push_back(Card(SUIT_CLUBS, RANK_ACE));
 
     CPPUNIT_ASSERT(engine.setDeck(deck));
+
+    CPPUNIT_ASSERT(19 == gameCardsTracker.deckCards());
 
     CPPUNIT_ASSERT(engine.playRound());
 
@@ -364,6 +379,8 @@ void GameTest::testThreePlayers00()
     CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->size() == 3);
     CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->empty());
     CPPUNIT_ASSERT((player2.mPlayerCards.end() - 1)->size() == 3);
+
+    CPPUNIT_ASSERT(1 == gameCardsTracker.deckCards());
 }
 
 void GameTest::testPitch00()
@@ -383,6 +400,10 @@ void GameTest::testPitch00()
         playerIds.push_back(engine.add(**it));
     }
 
+    GameCardsTracker gameCardsTracker;
+
+    engine.addGameObserver(gameCardsTracker);
+
     Deck deck;
 
     deck.push_back(Card(SUIT_SPADES, RANK_7));
@@ -398,6 +419,8 @@ void GameTest::testPitch00()
 
     CPPUNIT_ASSERT(engine.setDeck(deck));
 
+    CPPUNIT_ASSERT(7 == gameCardsTracker.deckCards());
+
     CPPUNIT_ASSERT(engine.playRound());
 
     // deal and three attacks
@@ -407,6 +430,9 @@ void GameTest::testPitch00()
 
     CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->size() == 1);
     CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->size() == 6);
+
+    CPPUNIT_ASSERT(gameCardsTracker.playerCards(player0.mId).size() == 1);
+    CPPUNIT_ASSERT(gameCardsTracker.playerCards(player1.mId).size() == 6);
 }
 
 void GameTest::testPitch01()
@@ -529,7 +555,7 @@ GameTest::Observer::~Observer()
     }
 }
 
-void GameTest::Observer::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> players)
+void GameTest::Observer::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> &players)
 {
     mPlayers = players;
     mTrumpSuit = trumpSuit;
@@ -586,7 +612,7 @@ void GameTest::Observer::roundEnded(unsigned int roundIndex)
     mCurrentRoundData = NULL;
 }
 
-void GameTest::TestPlayer0::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> players)
+void GameTest::TestPlayer0::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> &players)
 {
     Observer::gameStarted(trumpSuit, cardSet, players);
 }
