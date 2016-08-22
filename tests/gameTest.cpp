@@ -115,6 +115,10 @@ void GameTest::testOneRound00()
     deck.push_back(Card(SUIT_DIAMONDS, RANK_6)); // goes to player 0
     deck.push_back(Card(SUIT_DIAMONDS, RANK_9)); // goes to player 1, trump suit
 
+    GameCardsTracker tracker;
+
+    engine.addGameObserver(tracker);
+
     CPPUNIT_ASSERT(engine.setDeck(deck));
 
     CPPUNIT_ASSERT(!engine.playRound()); // cards for one round only
@@ -122,6 +126,9 @@ void GameTest::testOneRound00()
     CPPUNIT_ASSERT(player0Id == player0.mId);
     CPPUNIT_ASSERT(player1Id == player1.mId);
 
+    CPPUNIT_ASSERT(!tracker.deckCards());
+    CPPUNIT_ASSERT(tracker.playerCards(player0.mId).empty());
+    CPPUNIT_ASSERT(tracker.playerCards(player1.mId).empty());
 }
 
 void GameTest::testOneRound01()
@@ -140,8 +147,10 @@ void GameTest::testOneRound01()
     }
 
     Observer observer;
+    GameCardsTracker tracker;
 
     engine.addGameObserver(observer);
+    engine.addGameObserver(tracker);
 
     Deck deck;
 
@@ -177,11 +186,13 @@ void GameTest::testOneRound01()
 
     CPPUNIT_ASSERT(engine.setDeck(deck));
 
+    CPPUNIT_ASSERT(19 == tracker.deckCards());
+
     // check game started
     std::vector<Card> observerGameCards, deckCards;
     std::copy(observer.mGameCards.begin(), observer.mGameCards.end(), std::back_inserter(observerGameCards));
     std::copy(deck.begin(), deck.end(), std::back_inserter(deckCards));
-    // if deck is shuffled the observer should not receive same cardset
+    // if deck is shuffled the observer should not receive same cards
     CPPUNIT_ASSERT(deckCards != observerGameCards);
     CPPUNIT_ASSERT(deckCards.size() == observerGameCards.size());
 
@@ -206,12 +217,18 @@ void GameTest::testOneRound01()
         CPPUNIT_ASSERT(!player.mPlayerCards.empty());
         // check deal
         CPPUNIT_ASSERT(player.mPlayerCards[0].size() == MAX_CARDS);
-        // compare last player's update in the round with observer's
+        // compare last player's update in the round with observer
         CPPUNIT_ASSERT(observer.mPlayersCards[player.mId] == player.mPlayerCards[player.mPlayerCards.size() - 1].size());
     }
 
     // deck has cards for player0 and player1 to play the round without pitch from player2
     CPPUNIT_ASSERT(1 == player2.mPlayerCards.size());
+
+    CPPUNIT_ASSERT(tracker.playerCards(player0.mId).empty());
+    CPPUNIT_ASSERT(tracker.playerCards(player1.mId).empty());
+    CPPUNIT_ASSERT(MAX_CARDS == tracker.playerCards(player2.mId).size());
+
+    CPPUNIT_ASSERT(tracker.deckCards() == 1);
 }
 
 void GameTest::testOneRound02()
@@ -238,6 +255,10 @@ void GameTest::testOneRound02()
     deck.push_back(Card(SUIT_CLUBS, RANK_7));
     deck.push_back(Card(SUIT_SPADES, RANK_6));
 
+    GameCardsTracker tracker;
+
+    engine.addGameObserver(tracker);
+
     CPPUNIT_ASSERT(engine.setDeck(deck));
 
     CPPUNIT_ASSERT(engine.playRound());
@@ -245,6 +266,9 @@ void GameTest::testOneRound02()
     CPPUNIT_ASSERT(engine.getLoser() == player1.mId);
     CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->empty());
     CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->size() == 1);
+    CPPUNIT_ASSERT(tracker.deckCards() == 0);
+    CPPUNIT_ASSERT(tracker.playerCards(player0.mId).empty());
+    CPPUNIT_ASSERT(1 == tracker.playerCards(player1.mId).size());
 }
 
 void GameTest::testOneRound03()
@@ -270,12 +294,20 @@ void GameTest::testOneRound03()
     deck.push_back(Card(SUIT_SPADES, RANK_7));
     deck.push_back(Card(SUIT_DIAMONDS, RANK_6));
 
+    GameCardsTracker tracker;
+
+    engine.addGameObserver(tracker);
+
     CPPUNIT_ASSERT(engine.setDeck(deck));
 
     CPPUNIT_ASSERT(!engine.playRound());
     CPPUNIT_ASSERT(engine.getLoser() == player0.mId);
     CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->size() == 1);
     CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->empty());
+
+    CPPUNIT_ASSERT(tracker.playerCards(player0.mId).size() == 1);
+    CPPUNIT_ASSERT(tracker.playerCards(player1.mId).empty());
+    CPPUNIT_ASSERT(!tracker.deckCards());
 }
 
 void GameTest::testDraw00()
@@ -466,8 +498,13 @@ void GameTest::testPitch01()
 
     deck.push_back(Card(SUIT_CLUBS, RANK_ACE));
 
+    GameCardsTracker tracker;
+
+    engine.addGameObserver(tracker);
+
     CPPUNIT_ASSERT(engine.setDeck(deck));
 
+    CPPUNIT_ASSERT(tracker.deckCards() == 10);
     CPPUNIT_ASSERT(engine.playRound());
 
     // deal and two attacks
@@ -478,8 +515,12 @@ void GameTest::testPitch01()
     CPPUNIT_ASSERT(player2.mPlayerCards.size() == 2);
 
     CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->size() == 2);
-    CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->size() == 6);
+    CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->size() == MAX_CARDS);
     CPPUNIT_ASSERT((player2.mPlayerCards.end() - 1)->size() == 2);
+
+    CPPUNIT_ASSERT(tracker.playerCards(player0.mId).size() == 2);
+    CPPUNIT_ASSERT(tracker.playerCards(player1.mId).size() == MAX_CARDS);
+    CPPUNIT_ASSERT(tracker.playerCards(player2.mId).size() == 2);
 }
 
 static bool checkCard(const CardSet& set, const Card& card)
