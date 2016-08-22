@@ -44,6 +44,7 @@ public:
     void removeCards(const CardSet& cards);
     /**
      * @brief Returns true if the set is empty
+     * Returns true if the set is empty
      * @return total number of cards
      */
     bool empty() const;
