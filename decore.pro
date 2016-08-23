@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       -= core gui
+CONFIG -= qt
 
 TARGET = decore
 TEMPLATE = lib

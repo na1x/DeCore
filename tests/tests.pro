@@ -4,9 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       -= core
-
-QT       -= gui
+CONFIG -= qt
 
 TARGET = tests
 CONFIG   += console
