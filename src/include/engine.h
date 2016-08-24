@@ -4,9 +4,11 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <pthread.h>
 
 #include "playerId.h"
 #include "cardSet.h"
+#include "gameObserver.h"
 
 /**
  * @mainpage DeCore
@@ -21,6 +23,8 @@ namespace decore
 class Player;
 class GameObserver;
 class Deck;
+class DataReader;
+class DataWriter;
 
 /**
  * @brief The game engine class
@@ -38,6 +42,54 @@ class Deck;
  */
 class Engine
 {
+    /**
+     * @brief Cards on the table
+     */
+    class TableCards
+    {
+        /**
+         * @brief Attacker's cards
+         */
+        std::vector<Card> mAttackCards;
+        /**
+         * @brief Defender's cards
+         */
+        std::vector<Card> mDefendCards;
+        /**
+         * @brief Attacker;s and defender cards all together
+         */
+        CardSet mAll;
+    public:
+        /**
+         * @brief Adds the `card` as attacker's
+         * @param card card to add
+         */
+        void addAttackCard(const Card& card);
+        /**
+         * @brief Adds the `card` as defender's
+         * @param card card to add
+         */
+        void addDefendCard(const Card& card);
+        /**
+         * Returns all cards
+         * @return cards
+         */
+        const CardSet& all() const;
+        /**
+         * @brief Checks if empty
+         * @return true if empty
+         */
+        bool empty() const;
+        /**
+         * @brief Returns amount of attackers cards
+         * @return number of cards
+         */
+        unsigned int attackCards() const;
+        /**
+         * @brief Resets the instance
+         */
+        void clear();
+    };
     /**
      * @brief Generated player ids
      *
@@ -77,11 +129,31 @@ class Engine
      */
     unsigned int mRoundIndex;
 
+    /**
+     * @brief List of attacker ids
+     */
+    std::vector<const PlayerId*> mAttackers;
+
+    /**
+     * @brief Defender's id
+     */
+    const PlayerId* mDefender;
+
+    TableCards mTableCards;
+
 public:
     /**
      * @brief Ctor
      */
     Engine();
+    /**
+     * @brief Restores game from the `reader`
+     * @param reader reader which keeps saved state
+     * @param players list of the players
+     * @param observers list of game observers
+     * @see save()
+     */
+    Engine(DataReader& reader, const std::vector<Player*> players, std::vector<GameObserver*> observers);
     /**
      * @brief Dtor
      */
@@ -116,7 +188,7 @@ public:
      * @brief Plays one round
      *
      * Synchronously plays game round.
-     * Game observers notified about game state chamges.
+     * Game observers notified about game state changes.
      *
      * @return true if game is not ended and one more round could be played
      */
@@ -128,6 +200,11 @@ public:
      * @return loser id or `NULL` if draw or game not ended yet
      */
     const PlayerId* getLoser();
+    /**
+     * @brief Saves current state of the game into the `write`
+     * @param writer writer to save state
+     */
+    void save(DataWriter& writer) const;
 
 private:
 
@@ -187,10 +264,55 @@ private:
     };
 
     /**
+     * @brief std::for_each function
+     */
+    class CardsAmountReceivedNotification
+    {
+        const PlayerId* mPlayerId;
+        const unsigned int mCardsReceived;
+    public:
+        CardsAmountReceivedNotification(const PlayerId* playerId, unsigned int cardsReceived);
+        void operator()(GameObserver* observer);
+    };
+
+    /**
+     * @brief std::for_each function
+     */
+    class CardsReceivedNotification
+    {
+        const PlayerId* mPlayerId;
+        const CardSet& mReceivedCards;
+    public:
+        CardsReceivedNotification(const PlayerId* playerId, const CardSet& receivedCards);
+        void operator()(GameObserver* observer);
+    };
+
+    /**
+     * @brief std::for_each function
+     */
+    class CardsDroppedNotification
+    {
+        const PlayerId* mPlayerId;
+        CardSet mDroppedCards;
+    public:
+        CardsDroppedNotification(const PlayerId* playerId, const Card& droppedCard);
+        void operator()(GameObserver* observer);
+    };
+
+    /**
      * @brief Checks if the game is ended
      * @return true if ended
      */
     bool gameEnded() const;
+    /**
+     * Plays current round
+     * @return true if defended
+     */
+    bool playCurrentRound();
+    /**
+     * @brief Deals cards before playing round
+     */
+    void dealCards();
 };
 
 }

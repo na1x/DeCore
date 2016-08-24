@@ -6,6 +6,8 @@
 
 CONFIG -= qt
 
+CONFIG+=debug
+
 TARGET = tests
 CONFIG   += console
 CONFIG   -= app_bundle
@@ -23,24 +25,19 @@ SOURCES += \
     cardTest.cpp \
     engineTest.cpp \
     rulesTest.cpp \
-    gameTest.cpp
+    gameTest.cpp \
+    saveRestoreTest.cpp
 
 HEADERS += \
     include/cardTest.h \
     include/engineTest.h \
     include/rulesTest.h \
     include/gameTest.h \
-    include/defines.h
+    include/defines.h \
+    include/saveRestoreTest.h
 
 INCLUDEPATH += $$PWD/../src/include
 DEPENDPATH += $$PWD/../src/include
 
-CONFIG(debug, release | debug) {
-    LIBS += -L$$PWD/.. -ldecore
-    PRE_TARGETDEPS += $$PWD/../libdecore.a
-}
-
-CONFIG(release, release | debug) {
-    LIBS += -L$$PWD/.. -ldecore
-    PRE_TARGETDEPS += $$PWD/../libdecore.a
-}
+LIBS += -L$$PWD/.. -ldecore
+PRE_TARGETDEPS += $$PWD/../libdecore.a

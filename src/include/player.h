@@ -14,7 +14,7 @@ class Card;
  * @brief The player abstraction
  *
  * About player's cards:
- * The cards maintaned by engine and there's no way(and no need) for the player to get info about all its cards.
+ * The cards maintained by engine and there's no way(and no need) for the player to get info about all its cards.
  * To track the cards:
  * - remember list of the cards in Player::cardsUpdated()
  * - remove cards from the list in Player::attack(), Player::pitch() and Player::defend()
@@ -52,9 +52,9 @@ public:
      */
     virtual const Card* pitch(const PlayerId* playerId, const CardSet& cardSet) = 0;
     /**
-     * @brief The player defends against atacker with playerId
+     * @brief The player defends against attacker with playerId
      *
-     * The move is optinal: to pick up the cards return NULL - this means that defend is failed.
+     * The move is optional: to pick up the cards return NULL - this means that defend is failed.
      * Note: the method is invoked even if cardSet is empty - returned value ignored in the case
      * @param playerId attacker's player id
      * @param attackCard card to beat
@@ -65,7 +65,7 @@ public:
     /**
      * @brief Notification from engine about updated cards
      *
-     * Invoked when user reveives cards:
+     * Invoked when user receives cards:
      * - from the deck
      * - from the table (grabbed)
      *
