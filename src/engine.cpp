@@ -163,6 +163,7 @@ bool Engine::gameEnded() const
 
 void Engine::save(DataWriter& writer) const
 {
+    // TODO: add synchronization
 #define SAVE_CARD(writer, card) \
     writer.write(static_cast<unsigned int>(card.rank())); \
     writer.write(static_cast<unsigned int>(card.suit()));

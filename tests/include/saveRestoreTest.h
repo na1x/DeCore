@@ -2,7 +2,13 @@
 #define SAVERESTORETEST_H
 
 #include <cppunit/extensions/HelperMacros.h>
+#include <pthread.h>
+#include <vector>
+
 #include "player.h"
+#include "engine.h"
+#include "basePlayer.h"
+#include "dataWriter.h"
 
 using namespace decore;
 
@@ -17,22 +23,52 @@ public:
 
 private:
 
-    class BasePlayer : public Player
+    class PlayerSyncData
     {
-        void idCreated(const PlayerId* id);
-        const Card& attack(const PlayerId* playerId, const CardSet& cardSet);
-        const Card* pitch(const PlayerId* playerId, const CardSet& cardSet);
-        const Card* defend(const PlayerId* playerId, const Card& attackCard, const CardSet& cardSet);
-        void cardsUpdated(const CardSet& cardSet);
+        pthread_mutex_t mMoveMutex;
+        pthread_cond_t mMoveSignal;
+        bool mDontWaitForMove;
 
-        void gameStarted(const Suit& trumpSuit, const CardSet& cardSet, const std::vector<const PlayerId*>& players);
-        void roundStarted(unsigned int roundIndex, const std::vector<const PlayerId*> attackers, const PlayerId* defender);
-        void roundEnded(unsigned int roundIndex);
-        void cardsPickedUp(const PlayerId* playerId, const CardSet& cardSet);
-        void cardsDealed(const PlayerId* playerId, unsigned int cardsAmount);
-        void cardsLeft(const CardSet& cardSet);
-        void cardsDropped(const PlayerId* playerId, const CardSet& cardSet);
+        pthread_mutex_t mThreadMutex;
+        pthread_cond_t mThreadSignal;
+        Engine* mEngine;
+
+    public:
+        PlayerSyncData();
+        ~PlayerSyncData();
+
+        void signalMove();
+        void waitForMove();
+
+        void signalThread(Engine* engine);
+        Engine* waitForThread();
     };
+
+    class AttackWaitPlayer : public BasePlayer
+    {
+        PlayerSyncData& mSyncData;
+    public:
+        AttackWaitPlayer(PlayerSyncData& syncData);
+        const Card& attack(const PlayerId* playerId, const CardSet& cardSet);
+    };
+
+    class DefendWaitPlayer : public BasePlayer
+    {
+        PlayerSyncData& mSyncData;
+    public:
+        DefendWaitPlayer(PlayerSyncData& syncData);
+        const Card* defend(const PlayerId* playerId, const Card& attackCard, const CardSet& cardSet);
+    };
+
+    class TestWriter : public DataWriter
+    {
+    public:
+        std::vector<unsigned char> mBytes;
+    protected:
+        void write(const void* data, unsigned int dataSizeBytes);
+
+    };
+    static void* attackWaitTestThread(void* data);
 };
 
 #endif /* SAVERESTORETEST_H */

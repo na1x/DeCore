@@ -18,7 +18,8 @@ INCLUDEPATH +=  include
 
 TEMPLATE = app
 
-LIBS += -lcppunit
+LIBS += -lcppunit \
+    -lpthread
 
 SOURCES += \
     main.cpp \
@@ -26,7 +27,8 @@ SOURCES += \
     engineTest.cpp \
     rulesTest.cpp \
     gameTest.cpp \
-    saveRestoreTest.cpp
+    saveRestoreTest.cpp \
+    basePlayer.cpp
 
 HEADERS += \
     include/cardTest.h \
@@ -34,7 +36,8 @@ HEADERS += \
     include/rulesTest.h \
     include/gameTest.h \
     include/defines.h \
-    include/saveRestoreTest.h
+    include/saveRestoreTest.h \
+    include/basePlayer.h
 
 INCLUDEPATH += $$PWD/../src/include
 DEPENDPATH += $$PWD/../src/include

@@ -52,76 +52,7 @@ void EngineTest::testAddDuplicatedPlayers()
     CPPUNIT_ASSERT(std::find(ids.begin(), ids.end(), id1) != ids.end());
 }
 
-
-
-void EngineTest::TestPlayer::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> &players)
-{
-    (void)trumpSuit;
-    (void)cardSet;
-    (void)players;
-}
-
-void EngineTest::TestPlayer::cardsLeft(const CardSet &cardSet)
-{
-    (void)cardSet;
-}
-
-void EngineTest::TestPlayer::cardsDropped(const PlayerId *playerId, const CardSet &cardSet)
-{
-    (void)cardSet;
-    (void)playerId;
-}
-
-void EngineTest::TestPlayer::cardsPickedUp(const PlayerId *playerId, const CardSet &cardSet)
-{
-    (void)cardSet;
-    (void)playerId;
-}
-
-void EngineTest::TestPlayer::cardsDealed(const PlayerId *playerId, unsigned int cardsAmount)
-{
-    (void)cardsAmount;
-    (void)playerId;
-}
-
 void EngineTest::TestPlayer::idCreated(const PlayerId *id)
 {
     mIds.push_back(id);
-}
-
-const Card &EngineTest::TestPlayer::attack(const PlayerId *playerId, const CardSet &cardSet)
-{
-    (void)playerId;
-    return *cardSet.begin();
-}
-
-const Card *EngineTest::TestPlayer::pitch(const PlayerId *playerId, const CardSet &cardSet)
-{
-    (void)playerId;
-    return cardSet.empty() ? NULL : &*cardSet.begin();
-}
-
-const Card *EngineTest::TestPlayer::defend(const PlayerId *playerId, const Card& card, const CardSet &cardSet)
-{
-    (void)playerId;
-    (void)card;
-    return cardSet.empty() ? NULL : &*cardSet.begin();
-}
-
-void EngineTest::TestPlayer::cardsUpdated(const CardSet &cardSet)
-{
-    (void)cardSet;
-}
-
-
-void EngineTest::TestPlayer::roundStarted(unsigned int roundIndex, const std::vector<const PlayerId *> attackers, const PlayerId *defender)
-{
-    (void) roundIndex;
-    (void) attackers;
-    (void) defender;
-}
-
-void EngineTest::TestPlayer::roundEnded(unsigned int roundIndex)
-{
-    (void) roundIndex;
 }

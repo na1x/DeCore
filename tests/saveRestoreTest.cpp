@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "saveRestoreTest.h"
 #include "engine.h"
 #include "deck.h"
@@ -7,84 +9,96 @@
 
 using namespace decore;
 
-void SaveRestoreTest::BasePlayer::idCreated(const PlayerId* id)
+SaveRestoreTest::AttackWaitPlayer::AttackWaitPlayer(PlayerSyncData& syncData)
+    : mSyncData(syncData)
 {
-    (void)id;
+
 }
 
-const Card& SaveRestoreTest::BasePlayer::attack(const PlayerId* playerId, const CardSet& cardSet)
+const Card& SaveRestoreTest::AttackWaitPlayer::attack(const PlayerId* playerId, const CardSet& cardSet)
 {
     (void) playerId;
+    mSyncData.waitForMove();
     return *cardSet.begin();
 }
 
-const Card* SaveRestoreTest::BasePlayer::pitch(const PlayerId* playerId, const CardSet& cardSet)
+SaveRestoreTest::DefendWaitPlayer::DefendWaitPlayer(PlayerSyncData& syncData)
+    : mSyncData(syncData)
 {
-    (void) playerId;
-    (void) cardSet;
-    return NULL;
 }
 
-const Card* SaveRestoreTest::BasePlayer::defend(const PlayerId* playerId, const Card& attackCard, const CardSet& cardSet)
+const Card* SaveRestoreTest::DefendWaitPlayer::defend(const PlayerId* playerId, const Card& attackCard, const CardSet& cardSet)
 {
     (void) playerId;
-    (void) cardSet;
     (void) attackCard;
+    (void) cardSet;
+    mSyncData.waitForMove();
     return NULL;
 }
 
-void SaveRestoreTest::BasePlayer::cardsUpdated(const CardSet& cardSet)
+SaveRestoreTest::PlayerSyncData::PlayerSyncData()
+    : mDontWaitForMove(false)
+    , mEngine(NULL)
 {
-    (void) cardSet;
+    pthread_mutex_init(&mMoveMutex, NULL);
+    pthread_cond_init(&mMoveSignal, NULL);
+
+    pthread_mutex_init(&mThreadMutex, NULL);
+    pthread_cond_init(&mThreadSignal, NULL);
 }
 
-void SaveRestoreTest::BasePlayer::gameStarted(const Suit& trumpSuit, const CardSet& cardSet, const std::vector<const PlayerId*>& players)
+SaveRestoreTest::PlayerSyncData::~PlayerSyncData()
 {
-    (void) trumpSuit;
-    (void) cardSet;
-    (void) players;
+    pthread_mutex_destroy(&mMoveMutex);
+    pthread_cond_destroy(&mMoveSignal);
+
+    pthread_mutex_destroy(&mThreadMutex);
+    pthread_cond_destroy(&mThreadSignal);
 }
 
-void SaveRestoreTest::BasePlayer::roundStarted(unsigned int roundIndex, const std::vector<const PlayerId*> attackers, const PlayerId* defender)
+void SaveRestoreTest::PlayerSyncData::signalMove()
 {
-    (void) roundIndex;
-    (void) attackers;
-    (void) defender;
+    pthread_mutex_lock(&mMoveMutex);
+    mDontWaitForMove = true;
+    pthread_cond_broadcast(&mMoveSignal);
+    pthread_mutex_unlock(&mMoveMutex);
 }
 
-void SaveRestoreTest::BasePlayer::roundEnded(unsigned int roundIndex)
+void SaveRestoreTest::PlayerSyncData::waitForMove()
 {
-    (void) roundIndex;
+    pthread_mutex_lock(&mMoveMutex);
+    if (!mDontWaitForMove) {
+        pthread_cond_wait(&mMoveSignal, &mMoveMutex);
+    }
+    pthread_mutex_unlock(&mMoveMutex);
 }
 
-void SaveRestoreTest::BasePlayer::cardsPickedUp(const PlayerId* playerId, const CardSet& cardSet)
+void SaveRestoreTest::PlayerSyncData::signalThread(Engine* engine)
 {
-    (void) playerId;
-    (void) cardSet;
+    pthread_mutex_lock(&mThreadMutex);
+    mEngine = engine;
+    pthread_cond_broadcast(&mThreadSignal);
+    pthread_mutex_unlock(&mThreadMutex);
 }
 
-void SaveRestoreTest::BasePlayer::cardsDealed(const PlayerId* playerId, unsigned int cardsAmount)
+Engine* SaveRestoreTest::PlayerSyncData::waitForThread()
 {
-    (void) playerId;
-    (void) cardsAmount;
+    pthread_mutex_lock(&mThreadMutex);
+    if (!mEngine) {
+        pthread_cond_wait(&mThreadSignal, &mThreadMutex);
+    }
+    pthread_mutex_unlock(&mThreadMutex);
+    return mEngine;
 }
 
-void SaveRestoreTest::BasePlayer::cardsLeft(const CardSet& cardSet)
+void* SaveRestoreTest::attackWaitTestThread(void* data)
 {
-    (void) cardSet;
-}
+    PlayerSyncData& syncData = *static_cast<PlayerSyncData*>(data);
 
-void SaveRestoreTest::BasePlayer::cardsDropped(const PlayerId* playerId, const CardSet& cardSet)
-{
-    (void) playerId;
-    (void) cardSet;
-}
-
-void SaveRestoreTest::test00()
-{
     Engine engine;
 
-    BasePlayer player0, player1;
+    AttackWaitPlayer player0(syncData);
+    BasePlayer player1;
 
     engine.add(player0);
     engine.add(player1);
@@ -100,5 +114,40 @@ void SaveRestoreTest::test00()
 
     engine.setDeck(deck);
 
+    syncData.signalThread(&engine);
+
     engine.playRound();
+
+    return NULL;
+}
+
+void SaveRestoreTest::test00()
+{
+    pthread_t engineThread;
+
+    PlayerSyncData syncData;
+
+    pthread_create(&engineThread, NULL, attackWaitTestThread, &syncData);
+
+    Engine* engine = syncData.waitForThread();
+
+    CPPUNIT_ASSERT(engine);
+
+    TestWriter savedData;
+
+    engine->save(savedData);
+
+    syncData.signalMove();
+
+    pthread_join(engineThread, NULL);
+
+    CPPUNIT_ASSERT(!savedData.mBytes.empty());
+}
+
+void SaveRestoreTest::TestWriter::write(const void* data, unsigned int dataSizeBytes)
+{
+    const char* dataPtr = static_cast<const char*>(data);
+    while (dataSizeBytes--) {
+        mBytes.push_back(*dataPtr++);
+    }
 }

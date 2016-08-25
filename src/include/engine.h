@@ -2,9 +2,7 @@
 #define ENGINE_H
 
 #include <map>
-#include <set>
 #include <vector>
-#include <pthread.h>
 
 #include "playerId.h"
 #include "cardSet.h"
