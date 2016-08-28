@@ -8,6 +8,7 @@
 #include "card.h"
 #include "gameTest.h"
 #include "gameCardsTracker.h"
+#include "defines.h"
 
 using namespace decore;
 
@@ -119,12 +120,26 @@ void* SaveRestoreTest::attackWaitTestThread(void* data)
 
     Deck deck;
 
-    deck.push_back(Card(SUIT_CLUBS, RANK_6));
-    deck.push_back(Card(SUIT_CLUBS, RANK_7));
-    deck.push_back(Card(SUIT_CLUBS, RANK_8));
-    deck.push_back(Card(SUIT_CLUBS, RANK_9));
-    deck.push_back(Card(SUIT_CLUBS, RANK_10));
-    deck.push_back(Card(SUIT_CLUBS, RANK_JACK));
+    Rank ranks[] = {
+        RANK_6,
+        RANK_7,
+        RANK_8,
+        RANK_9,
+        RANK_10,
+        RANK_JACK,
+        RANK_QUEEN,
+        RANK_KING,
+        RANK_ACE,
+    };
+
+    Suit suits[] = {
+        SUIT_SPADES,
+        SUIT_HEARTS,
+        SUIT_DIAMONDS,
+        SUIT_CLUBS,
+    };
+
+    deck.generate(ranks, ARRAY_SIZE(ranks), suits, ARRAY_SIZE(suits));
 
     engine.setDeck(deck);
 
@@ -172,8 +187,15 @@ void SaveRestoreTest::test00()
     players.push_back(&player0);
     players.push_back(&player1);
 
+    GameCardsTracker tracker;
+    restored.addGameObserver(tracker);
+
+    std::vector<GameObserver*> observers;
+    observers.push_back(&tracker);
+
     TestReader reader(savedData.mBytes);
-    restored.init(reader, players);
+    restored.init(reader, players, observers);
+    CPPUNIT_ASSERT(24 == tracker.deckCards());
 }
 
 void SaveRestoreTest::TestWriter::write(const void* data, unsigned int dataSizeBytes)

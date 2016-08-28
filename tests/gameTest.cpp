@@ -659,6 +659,22 @@ void GameTest::Observer::tableCardsRestored(const std::vector<Card>& attackCards
     (void) defendCards;
 }
 
+void GameTest::Observer::write(DataWriter& writer)
+{
+    // do nothing
+    // actually there is a lot of info to save, but the test does not use save/init cases
+    (void) writer;
+}
+
+void GameTest::Observer::init(DataReader& reader)
+{
+    // do nothing
+    // do nothing
+    // actually there is a lot of info to save, but the test does not use save/init cases
+    (void) reader;
+}
+
+
 void GameTest::TestPlayer0::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> &players)
 {
     Observer::gameStarted(trumpSuit, cardSet, players);
@@ -687,6 +703,16 @@ void GameTest::TestPlayer0::cardsDealed(const PlayerId *playerId, unsigned int c
 void GameTest::TestPlayer0::tableCardsRestored(const std::vector<decore::Card>& attackCards, const std::vector<decore::Card>& defendCards)
 {
     Observer::tableCardsRestored(attackCards, defendCards);
+}
+
+void GameTest::TestPlayer0::write(decore::DataWriter& writer)
+{
+    Observer::write(writer);
+}
+
+void GameTest::TestPlayer0::init(decore::DataReader& reader)
+{
+    Observer::init(reader);
 }
 
 void GameTest::TestPlayer0::removeCard(const Card *card)

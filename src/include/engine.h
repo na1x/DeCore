@@ -232,9 +232,10 @@ public:
     /**
      * @brief Initializes the instance from the 'reader'
      * @param reader contains data saved
-     * @param players
+     * @param players players
+     * @param observers game observers
      */
-    void init(DataReader& reader, const std::vector<Player*> players);
+    void init(DataReader& reader, const std::vector<Player*> players, const std::vector<GameObserver*>& observers);
     /**
      * @brief Requests quit
      *
@@ -337,6 +338,9 @@ private:
         void operator()(GameObserver* observer);
     };
 
+    /**
+     * @brief std::for_each function
+     */
     class CardsRestoredNotification
     {
         const TableCards& mTableCards;
@@ -344,6 +348,18 @@ private:
         CardsRestoredNotification(const TableCards& tableCards);
         void operator()(GameObserver* observer);
     };
+
+    /**
+     * @brief std::for_each function
+     */
+    class CardsLeftNotification
+    {
+        const CardSet& mCards;
+    public:
+        CardsLeftNotification(const CardSet& tableCards);
+        void operator()(GameObserver* observer);
+    };
+
     /**
      * @brief Checks if the game is ended
      * @return true if ended

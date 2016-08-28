@@ -5,6 +5,8 @@
 #include <vector>
 
 #include "card.h"
+#include "dataWriter.h"
+#include "dataReader.h"
 
 namespace decore
 {
@@ -78,6 +80,16 @@ public:
      * @param defendCards
      */
     virtual void tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards) = 0;
+    /**
+     * @brief Implementation can save its internal data to the `writer`
+     * @param writer data destination
+     */
+    virtual void write(DataWriter& writer) = 0;
+    /**
+     * @brief Implementation can read its internal data from the `reader`
+     * @param writer data destination
+     */
+    virtual void init(DataReader& reader) = 0;
 };
 
 }

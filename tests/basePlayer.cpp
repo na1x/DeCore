@@ -89,4 +89,17 @@ void BasePlayer::tableCardsRestored(const std::vector<Card>& attackCards, const 
     (void) defendCards;
 }
 
+void BasePlayer::write(DataWriter& writer)
+{
+    // just save something
+    int value = 0;
+    writer.write(value);
+}
+
+void BasePlayer::init(DataReader& reader)
+{
+    // just read previously saved
+    int value;
+    reader.read(value);
+}
 

@@ -23,6 +23,10 @@ public:
     void cardsLeft(const CardSet& cardSet);
     void cardsDropped(const PlayerId* playerId, const CardSet& cardSet);
     void tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards);
+    void write(DataWriter& writer);
+    void init(DataReader& reader);
+
+
 };
 
 #endif /* BASEPLAYER_H */

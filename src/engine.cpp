@@ -233,10 +233,16 @@ void Engine::save(DataWriter& writer)
         writer.write(mTableCards.defendCards().begin(), mTableCards.defendCards().end());
     }
 
+    // save observers data
+    unsigned int observersCount = mGameObservers.size();
+    writer.write(observersCount);
+    for (std::vector<GameObserver*>::iterator it = mGameObservers.begin(); it != mGameObservers.end(); ++it) {
+        (*it)->write(writer);
+    }
     unlock();
 }
 
-void Engine::init(DataReader& reader, const std::vector<Player*> players)
+void Engine::init(DataReader& reader, const std::vector<Player*> players, const std::vector<GameObserver*>& observers)
 {
     // check that engine is not initialized yet
     assert(!mPlayerIdCounter);
@@ -308,6 +314,17 @@ void Engine::init(DataReader& reader, const std::vector<Player*> players)
             mTableCards.addDefendCard(*it);
         }
     }
+
+    // append observers
+    mGameObservers.insert(mGameObservers.end(), observers.begin(), observers.end());
+    // initialize observers
+    unsigned int savedObservers;
+    reader.read(savedObservers);
+    assert(savedObservers == mGameObservers.size());
+    for (std::vector<GameObserver*>::iterator it = mGameObservers.begin(); it != mGameObservers.end(); ++it) {
+        (*it)->init(reader);
+    }
+
     std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsRestoredNotification(mTableCards));
 }
 
@@ -510,6 +527,8 @@ if (quit) { \
         unlock();
         CHECK_QUIT;
         std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsReceivedNotification(mDefender, mTableCards.all()));
+    } else {
+        std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsLeftNotification(mTableCards.all()));
     }
 
     return !defendFailed;
@@ -594,5 +613,17 @@ void Engine::CardsRestoredNotification::operator ()(GameObserver* observer)
 {
     observer->tableCardsRestored(mTableCards.attackCards(), mTableCards.defendCards());
 }
+
+Engine::CardsLeftNotification::CardsLeftNotification(const CardSet& tableCards)
+    : mCards(tableCards)
+{
+
+}
+
+void Engine::CardsLeftNotification::operator ()(GameObserver* observer)
+{
+    observer->cardsLeft(mCards);
+}
+
 
 }

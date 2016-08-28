@@ -63,7 +63,8 @@ private:
         void roundStarted(unsigned int roundIndex, const std::vector<const decore::PlayerId *> attackers, const decore::PlayerId *defender);
         void roundEnded(unsigned int roundIndex);
         void tableCardsRestored(const std::vector<decore::Card>& attackCards, const std::vector<decore::Card>& defendCards);
-
+        void write(decore::DataWriter& writer);
+        void init(decore::DataReader& reader);
 
     private:
         RoundData* mCurrentRoundData;
@@ -91,6 +92,10 @@ private:
         void cardsPickedUp(const decore::PlayerId* playerId, const decore::CardSet& cardSet);
         void cardsDealed(const decore::PlayerId* playerId, unsigned int cardsAmount);
         void tableCardsRestored(const std::vector<decore::Card>& attackCards, const std::vector<decore::Card>& defendCards);
+        void write(decore::DataWriter& writer);
+        void init(decore::DataReader& reader);
+
+
 
 
     private:

@@ -82,6 +82,22 @@ class GameCardsTracker : public GameObserver
      * @see playerCards()
      */
     std::map<const PlayerId*, PlayerCards> mPlayersCards;
+    /**
+     * @brief Table cards
+     */
+    std::vector<Card> mAttackCards;
+    /**
+     * @brief Table cards
+     */
+    std::vector<Card> mDefendCards;
+    /**
+     * @brief Current round: attackers
+     */
+    std::vector<const PlayerId*> mAttackers;
+    /**
+     * @brief Current round: defender
+     */
+    const PlayerId* mDefender;
 public:
     void gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *>& players);
     void roundStarted(unsigned int roundIndex, const std::vector<const PlayerId *> attackers, const PlayerId *defender);
@@ -91,6 +107,8 @@ public:
     void cardsLeft(const CardSet &cardSet);
     void cardsDropped(const PlayerId *playerId, const CardSet &cardSet);
     void tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards);
+    void write(DataWriter& writer);
+    void init(DataReader& reader);
 
     /**
      * @brief Returns cards in the game
