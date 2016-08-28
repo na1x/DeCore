@@ -20,11 +20,15 @@ class Deck : public std::vector<Card>
 public:
     /**
      * @brief Append card to the end of the deck
+     *
+     * Trump suit of the deck is updated to the suit of the card
      * @param card card to append
      */
     void push_back(const Card& card);
     /**
      * @brief Generates card set
+     *
+     * Trump suit is taken from the last card.
      * @param ranks card ranks for generator
      * @param ranksSize size of ranks
      * @param suits card suits for generator
@@ -41,6 +45,12 @@ public:
      * @return trump suit
      */
     const Suit& trumpSuit() const;
+    /**
+     * @brief Updates trump suit for the deck
+     *
+     * Note: the trump suit also updated in generate() and push_back()
+     */
+    void setTrumpSuit(const Suit& trumpSuit);
 };
 
 }

@@ -13,6 +13,7 @@ public:
     const Card* pitch(const PlayerId* playerId, const CardSet& cardSet);
     const Card* defend(const PlayerId* playerId, const Card& attackCard, const CardSet& cardSet);
     void cardsUpdated(const CardSet& cardSet);
+    void cardsRestored(const CardSet& cards);
 
     void gameStarted(const Suit& trumpSuit, const CardSet& cardSet, const std::vector<const PlayerId*>& players);
     void roundStarted(unsigned int roundIndex, const std::vector<const PlayerId*> attackers, const PlayerId* defender);
@@ -21,6 +22,7 @@ public:
     void cardsDealed(const PlayerId* playerId, unsigned int cardsAmount);
     void cardsLeft(const CardSet& cardSet);
     void cardsDropped(const PlayerId* playerId, const CardSet& cardSet);
+    void tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards);
 };
 
 #endif /* BASEPLAYER_H */

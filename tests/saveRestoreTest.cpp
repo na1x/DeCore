@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <cassert>
+#include <iomanip>
 
 #include "saveRestoreTest.h"
 #include "engine.h"
@@ -18,6 +20,7 @@ SaveRestoreTest::AttackWaitPlayer::AttackWaitPlayer(PlayerSyncData& syncData)
 const Card& SaveRestoreTest::AttackWaitPlayer::attack(const PlayerId* playerId, const CardSet& cardSet)
 {
     (void) playerId;
+    mSyncData.signalThread();
     mSyncData.waitForMove();
     return *cardSet.begin();
 }
@@ -73,10 +76,17 @@ void SaveRestoreTest::PlayerSyncData::waitForMove()
     pthread_mutex_unlock(&mMoveMutex);
 }
 
-void SaveRestoreTest::PlayerSyncData::signalThread(Engine* engine)
+void SaveRestoreTest::PlayerSyncData::setEngine(Engine* engine)
 {
     pthread_mutex_lock(&mThreadMutex);
     mEngine = engine;
+    pthread_mutex_unlock(&mThreadMutex);
+}
+
+void SaveRestoreTest::PlayerSyncData::signalThread()
+{
+    pthread_mutex_lock(&mThreadMutex);
+    assert(mEngine);
     pthread_cond_broadcast(&mThreadSignal);
     pthread_mutex_unlock(&mThreadMutex);
 }
@@ -111,10 +121,14 @@ void* SaveRestoreTest::attackWaitTestThread(void* data)
 
     deck.push_back(Card(SUIT_CLUBS, RANK_6));
     deck.push_back(Card(SUIT_CLUBS, RANK_7));
+    deck.push_back(Card(SUIT_CLUBS, RANK_8));
+    deck.push_back(Card(SUIT_CLUBS, RANK_9));
+    deck.push_back(Card(SUIT_CLUBS, RANK_10));
+    deck.push_back(Card(SUIT_CLUBS, RANK_JACK));
 
     engine.setDeck(deck);
 
-    syncData.signalThread(&engine);
+    syncData.setEngine(&engine);
 
     engine.playRound();
 
@@ -123,6 +137,11 @@ void* SaveRestoreTest::attackWaitTestThread(void* data)
 
 void SaveRestoreTest::test00()
 {
+    // start game in separate thread
+    // save the game and terminate
+    // create new game from saved data
+    // validate created instance
+
     pthread_t engineThread;
 
     PlayerSyncData syncData;
@@ -130,24 +149,58 @@ void SaveRestoreTest::test00()
     pthread_create(&engineThread, NULL, attackWaitTestThread, &syncData);
 
     Engine* engine = syncData.waitForThread();
-
     CPPUNIT_ASSERT(engine);
 
+    // at this point engine is created and round started
+    // game flow will stuck on player's one attack
+    // save data here
     TestWriter savedData;
-
     engine->save(savedData);
+    // request quit
+    engine->quit();
+    // ping player one to return from "attack" method
 
     syncData.signalMove();
 
     pthread_join(engineThread, NULL);
 
     CPPUNIT_ASSERT(!savedData.mBytes.empty());
+
+    Engine restored;
+    BasePlayer player0, player1;
+    std::vector<Player*> players;
+    players.push_back(&player0);
+    players.push_back(&player1);
+
+    TestReader reader(savedData.mBytes);
+    restored.init(reader, players);
 }
 
 void SaveRestoreTest::TestWriter::write(const void* data, unsigned int dataSizeBytes)
 {
-    const char* dataPtr = static_cast<const char*>(data);
+    const unsigned char* dataPtr = static_cast<const unsigned char*>(data);
+    assert(dataSizeBytes);
+    mBytes.push_back(dataSizeBytes);
     while (dataSizeBytes--) {
         mBytes.push_back(*dataPtr++);
+    }
+}
+
+SaveRestoreTest::TestReader::TestReader(const std::vector<unsigned char>& bytes)
+    : mByteIndex(0)
+    , mBytes(bytes)
+{
+
+}
+
+void SaveRestoreTest::TestReader::read(void* data, unsigned int dataSizeBytes)
+{
+    unsigned char* dataPtr = static_cast<unsigned char*>(data);
+    assert(dataSizeBytes);
+    unsigned char recordedDataSize = mBytes[mByteIndex++];
+    CPPUNIT_ASSERT(dataSizeBytes == recordedDataSize);
+    while (dataSizeBytes--) {
+        CPPUNIT_ASSERT(mByteIndex < mBytes.size());
+        *dataPtr++ = mBytes[mByteIndex++];
     }
 }

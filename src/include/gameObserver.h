@@ -4,6 +4,8 @@
 #include <suit.h>
 #include <vector>
 
+#include "card.h"
+
 namespace decore
 {
 
@@ -68,6 +70,14 @@ public:
      * @param cardSet cards
      */
     virtual void cardsDropped(const PlayerId* playerId, const CardSet& cardSet) = 0;
+    /**
+     * @brief Table cards restored
+     *
+     * Invoked during game restoring
+     * @param attackCards
+     * @param defendCards
+     */
+    virtual void tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards) = 0;
 };
 
 }

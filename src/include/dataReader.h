@@ -20,7 +20,19 @@ public:
     template <typename T>
     void read(T& value)
     {
-        read(static_cast<void*>(value), sizeof(value));
+        read(static_cast<void*>(&value), sizeof(value));
+    }
+
+    template <typename T, typename V>
+    void read(T& container, const V& defaultValue)
+    {
+        typename T::size_type amount;
+        read(amount);
+        while (amount--) {
+            V value(defaultValue);
+            read(value);
+            container.insert(container.begin(), value);
+        }
     }
 
 protected:

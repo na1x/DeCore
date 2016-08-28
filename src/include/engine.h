@@ -35,8 +35,11 @@ class DataWriter;
  * - set deck (mandatory) - setDeck()
  * - call playRound till it returns true - playRound()
  *
- * The class is not intended to be "thread safe" and designed for single thread for the sake of simplicity.
+ * Generally the class is not intended to be "thread safe" and designed for single thread for the sake of simplicity.
  * All players and observers will be invoked from "inside" of playRound().
+ * Only methods to be used from other thread:
+ * - save()
+ * - quit()
  */
 class Engine
 {
@@ -79,10 +82,15 @@ class Engine
          */
         bool empty() const;
         /**
-         * @brief Returns amount of attackers cards
-         * @return number of cards
+         * @brief Returns attackers cards
+         * @return cards
          */
-        unsigned int attackCards() const;
+        const std::vector<Card>& attackCards() const;
+        /**
+         * @brief Returns defender's cards
+         * @return cards
+         */
+        const std::vector<Card>& defendCards() const;
         /**
          * @brief Resets the instance
          */
@@ -128,30 +136,45 @@ class Engine
     unsigned int mRoundIndex;
 
     /**
-     * @brief List of attacker ids
+     * @brief Current round state: list of attacker ids
      */
     std::vector<const PlayerId*> mAttackers;
 
     /**
-     * @brief Defender's id
+     * @brief Current round state: defender's id
      */
     const PlayerId* mDefender;
 
+    /**
+     * @brief Current round state: cards currently on the table
+     */
     TableCards mTableCards;
+
+    /**
+     * @brief Internal data synchronization lock
+     */
+    pthread_mutex_t mLock;
+
+    /**
+     * @brief Quit flag
+     */
+    bool mQuit;
+
+    /**
+     * @brief Current round state: current attacker
+     */
+    const PlayerId* mCurrentRoundAttackerId;
+
+    /**
+     * @brief Current round state: "passed" counter
+     */
+    unsigned int mPassedCounter;
 
 public:
     /**
      * @brief Ctor
      */
     Engine();
-    /**
-     * @brief Restores game from the `reader`
-     * @param reader reader which keeps saved state
-     * @param players list of the players
-     * @param observers list of game observers
-     * @see save()
-     */
-    Engine(DataReader& reader, const std::vector<Player*> players, std::vector<GameObserver*> observers);
     /**
      * @brief Dtor
      */
@@ -200,9 +223,26 @@ public:
     const PlayerId* getLoser();
     /**
      * @brief Saves current state of the game into the `write`
+     *
+     * Saved data could be used later to construct the engine from the data so allowing to resume the game.
      * @param writer writer to save state
      */
-    void save(DataWriter& writer) const;
+    void save(DataWriter& writer);
+
+    /**
+     * @brief Initializes the instance from the 'reader'
+     * @param reader contains data saved
+     * @param players
+     */
+    void init(DataReader& reader, const std::vector<Player*> players);
+    /**
+     * @brief Requests quit
+     *
+     * Use to terminate "play round" loop from other thread.
+     * The class user is responsible for stopping external players.
+     * Basically this method should be invoked before all players stopped (returned from attack/pitch/defend)
+     */
+    void quit();
 
 private:
 
@@ -297,13 +337,20 @@ private:
         void operator()(GameObserver* observer);
     };
 
+    class CardsRestoredNotification
+    {
+        const TableCards& mTableCards;
+    public:
+        CardsRestoredNotification(const TableCards& tableCards);
+        void operator()(GameObserver* observer);
+    };
     /**
      * @brief Checks if the game is ended
      * @return true if ended
      */
     bool gameEnded() const;
     /**
-     * Plays current round
+     * @brief Plays current round
      * @return true if defended
      */
     bool playCurrentRound();
@@ -311,6 +358,21 @@ private:
      * @brief Deals cards before playing round
      */
     void dealCards();
+    /**
+     * @brief Locks the instance
+     */
+    void lock();
+    /**
+     * @brief Unlocks the instance
+     */
+    void unlock();
+
+    /**
+     * @brief Returns index of the player in mGeneratedIds by the `id`
+     * @param id player id
+     * @return index
+     */
+    unsigned int playerIndex(const PlayerId* id);
 };
 
 }

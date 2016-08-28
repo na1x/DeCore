@@ -22,7 +22,7 @@ void GameTest::TestPlayer0::idCreated(const PlayerId*id)
 const Card &GameTest::TestPlayer0::attack(const PlayerId*, const CardSet &cardSet)
 {
     const Card& res = *cardSet.begin();
-    updateCards(&res);
+    removeCard(&res);
     return res;
 }
 
@@ -33,7 +33,7 @@ const Card *GameTest::TestPlayer0::pitch(const PlayerId*, const CardSet &cardSet
     }
 
     const Card* res = &*cardSet.begin();
-    updateCards(res);
+    removeCard(res);
     return res;
 }
 
@@ -46,7 +46,7 @@ const Card *GameTest::TestPlayer0::defend(const PlayerId*, const Card &card, con
     }
 
     const Card* res = &*cardSet.begin();
-    updateCards(res);
+    removeCard(res);
     return res;
 }
 
@@ -653,6 +653,12 @@ void GameTest::Observer::roundEnded(unsigned int roundIndex)
     mCurrentRoundData = NULL;
 }
 
+void GameTest::Observer::tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards)
+{
+    (void) attackCards;
+    (void) defendCards;
+}
+
 void GameTest::TestPlayer0::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> &players)
 {
     Observer::gameStarted(trumpSuit, cardSet, players);
@@ -678,13 +684,17 @@ void GameTest::TestPlayer0::cardsDealed(const PlayerId *playerId, unsigned int c
     Observer::cardsDealed(playerId, cardsAmount);
 }
 
-void GameTest::TestPlayer0::updateCards(const Card *card)
+void GameTest::TestPlayer0::tableCardsRestored(const std::vector<decore::Card>& attackCards, const std::vector<decore::Card>& defendCards)
+{
+    Observer::tableCardsRestored(attackCards, defendCards);
+}
+
+void GameTest::TestPlayer0::removeCard(const Card *card)
 {
     CardSet currentCards = *(mPlayerCards.end() - 1);
     CPPUNIT_ASSERT(currentCards.erase(*card));
     mPlayerCards.push_back(currentCards);
 }
-
 
 void GameTest::TestPlayer0::roundStarted(unsigned int roundIndex, const std::vector<const PlayerId *> attackers, const PlayerId *defender)
 {
@@ -694,4 +704,9 @@ void GameTest::TestPlayer0::roundStarted(unsigned int roundIndex, const std::vec
 void GameTest::TestPlayer0::roundEnded(unsigned int roundIndex)
 {
     Observer::roundEnded(roundIndex);
+}
+
+void GameTest::TestPlayer0::cardsRestored(const decore::CardSet& cards)
+{
+    mPlayerCards.push_back(cards);
 }

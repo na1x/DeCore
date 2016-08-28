@@ -23,7 +23,8 @@ void PlayerCards::removeCards(const CardSet& cards)
 {
     for(CardSet::const_iterator it = cards.begin(); it != cards.end(); ++it) {
         if (mKnownCards.find(*it) != mKnownCards.end()) {
-            mKnownCards.erase(*it);
+            bool erased = mKnownCards.erase(*it);
+            assert(erased);
         } else {
             assert(mUnknownCards);
             mUnknownCards--;
@@ -33,7 +34,7 @@ void PlayerCards::removeCards(const CardSet& cards)
 
 bool PlayerCards::empty() const
 {
-    return 0 == mUnknownCards && mKnownCards.empty();
+    return !mUnknownCards && mKnownCards.empty();
 }
 
 unsigned int PlayerCards::size() const
@@ -81,6 +82,12 @@ void GameCardsTracker::cardsDropped(const PlayerId* playerId, const CardSet &car
 {
     assert(mPlayersCards.find(playerId) != mPlayersCards.end());
     mPlayersCards[playerId].removeCards(cards);
+}
+
+void GameCardsTracker::tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards)
+{
+    (void) attackCards;
+    (void) defendCards;
 }
 
 const CardSet &GameCardsTracker::gameCards() const

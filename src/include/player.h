@@ -73,6 +73,13 @@ public:
      * @param cardSet full set of the cards the player have.
      */
     virtual void cardsUpdated(const CardSet& cardSet) = 0;
+    /**
+     * @brief Notification from engine about restored cards
+     *
+     * Invoked during restoring game
+     * @param cards cards
+     */
+    virtual void cardsRestored(const CardSet& cards) = 0;
 };
 
 }

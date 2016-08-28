@@ -58,4 +58,9 @@ const Suit& Deck::trumpSuit() const
     return mTrumpSuit;
 }
 
+void Deck::setTrumpSuit(const Suit& trumpSuit)
+{
+    mTrumpSuit = trumpSuit;
+}
+
 }

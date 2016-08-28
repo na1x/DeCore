@@ -1,6 +1,8 @@
 #ifndef DATAWRITER_H
 #define DATAWRITER_H
 
+#include <iterator>
+
 namespace decore
 {
 
@@ -21,6 +23,16 @@ public:
     void write(const T& value)
     {
         write(static_cast<const void*>(&value), sizeof(value));
+    }
+
+    template<typename T>
+    void write(T begin, T end)
+    {
+        typename T::difference_type elementsCount = std::distance(begin, end);
+        write(&elementsCount, sizeof(elementsCount));
+        for (T it = begin; it != end; ++it) {
+            write(&*it, sizeof(*it));
+        }
     }
 
 protected:

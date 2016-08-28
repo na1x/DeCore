@@ -90,6 +90,7 @@ public:
     void cardsDealed(const PlayerId *playerId, unsigned int cardsAmount);
     void cardsLeft(const CardSet &cardSet);
     void cardsDropped(const PlayerId *playerId, const CardSet &cardSet);
+    void tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards);
 
     /**
      * @brief Returns cards in the game

@@ -36,6 +36,11 @@ void BasePlayer::cardsUpdated(const CardSet& cardSet)
     (void) cardSet;
 }
 
+void BasePlayer::cardsRestored(const CardSet& cards)
+{
+    (void) cards;
+}
+
 void BasePlayer::gameStarted(const Suit& trumpSuit, const CardSet& cardSet, const std::vector<const PlayerId*>& players)
 {
     (void) trumpSuit;
@@ -77,4 +82,11 @@ void BasePlayer::cardsDropped(const PlayerId* playerId, const CardSet& cardSet)
     (void) playerId;
     (void) cardSet;
 }
+
+void BasePlayer::tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards)
+{
+    (void) attackCards;
+    (void) defendCards;
+}
+
 

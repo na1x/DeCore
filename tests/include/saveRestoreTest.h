@@ -9,6 +9,7 @@
 #include "engine.h"
 #include "basePlayer.h"
 #include "dataWriter.h"
+#include "dataReader.h"
 
 using namespace decore;
 
@@ -40,7 +41,8 @@ private:
         void signalMove();
         void waitForMove();
 
-        void signalThread(Engine* engine);
+        void setEngine(Engine* engine);
+        void signalThread();
         Engine* waitForThread();
     };
 
@@ -66,6 +68,18 @@ private:
         std::vector<unsigned char> mBytes;
     protected:
         void write(const void* data, unsigned int dataSizeBytes);
+
+    };
+
+    class TestReader : public DataReader
+    {
+        unsigned int mByteIndex;
+    public:
+        const std::vector<unsigned char>& mBytes;
+        TestReader(const std::vector<unsigned char>& bytes);
+
+    protected:
+        void read(void* data, unsigned int dataSizeBytes);
 
     };
     static void* attackWaitTestThread(void* data);
