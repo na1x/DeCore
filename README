@@ -5,10 +5,13 @@ Please refer to wiki documentation for further details.
 
 
 Building library:
-	qmake decore.pro && make
+	cd decore && qmake decore.pro && make
 
 Building tests (is not required for the users though):
 	cd tests && qmake tests.pro && make
+
+Or to build library and tests at once:
+	qmake all.pro && make
 
 Building doxygen documentation:
 	doxygen doxygen.cfg
