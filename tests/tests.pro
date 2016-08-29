@@ -39,8 +39,8 @@ HEADERS += \
     include/saveRestoreTest.h \
     include/basePlayer.h
 
-INCLUDEPATH += $$PWD/../src/include
-DEPENDPATH += $$PWD/../src/include
+INCLUDEPATH += $$PWD/../decore/include
+DEPENDPATH += $$PWD/../decore/include
 
-LIBS += -L$$PWD/.. -ldecore
-PRE_TARGETDEPS += $$PWD/../libdecore.a
+LIBS += -L$$PWD/../decore -ldecore
+PRE_TARGETDEPS += $$PWD/../decore/libdecore.a
