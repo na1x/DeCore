@@ -3,6 +3,8 @@
 
 #include "gameObserver.h"
 #include "cardSet.h"
+#include "playerIds.h"
+#include "cardSet.h"
 
 namespace decore {
 
@@ -53,12 +55,23 @@ public:
      * @return total number of cards
      */
     unsigned int size() const;
+    /**
+     * @brief Returns amount of unknown cards
+     * @return amount of unknown cards
+     */
+    unsigned int unknownCards() const;
+    /**
+     * @brief Returns known cards
+     * @return known cards
+     */
+    const CardSet& knownCards() const;
 };
 
 /**
  * @brief Game tracker.
  *
- * The main goal of the class is a helper for the game bots.
+ * The class gathers information about game cards which is attentive game observer can collect,
+ * so the main goal of the class is a helper for the game bots.
  */
 class GameCardsTracker : public GameObserver
 {
@@ -98,18 +111,30 @@ class GameCardsTracker : public GameObserver
      * @brief Current round: defender
      */
     const PlayerId* mDefender;
+    /**
+     * @brief Player ids in the game
+     */
+    PlayerIds mPlayerIds;
+    /**
+     * @brief The cards which left the game
+     */
+    CardSet mGoneCards;
 public:
     void gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *>& players);
     void roundStarted(unsigned int roundIndex, const std::vector<const PlayerId *> attackers, const PlayerId *defender);
     void roundEnded(unsigned int roundIndex);
     void cardsPickedUp(const PlayerId *playerId, const CardSet &cardSet);
     void cardsDealed(const PlayerId *playerId, unsigned int cardsAmount);
-    void cardsLeft(const CardSet &cardSet);
+    void cardsGone(const CardSet &cardSet);
     void cardsDropped(const PlayerId *playerId, const CardSet &cardSet);
-    void tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards);
-    void write(DataWriter& writer);
+    void save(DataWriter& writer);
     void init(DataReader& reader);
-
+    void gameRestored(const std::vector<const PlayerId*>& playerIds,
+        const std::map<const PlayerId*, unsigned int>& playersCards,
+        unsigned int deckCards,
+        const Suit& trumpSuit,
+        const std::vector<Card>& attackCards,
+        const std::vector<Card>& defendCards);
     /**
      * @brief Returns cards in the game
      * @return cards

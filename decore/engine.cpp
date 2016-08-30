@@ -98,13 +98,6 @@ void Engine::unlock()
     pthread_mutex_unlock(&mLock);
 }
 
-unsigned int Engine::playerIndex(const PlayerId* id)
-{
-    std::vector<const PlayerId*>::iterator it = std::find(mGeneratedIds.begin(), mGeneratedIds.end(), id);
-    assert(it != mGeneratedIds.end());
-    return it - mGeneratedIds.begin();
-}
-
 bool Engine::playRound()
 {
     if (!mDeck) {
@@ -213,7 +206,7 @@ void Engine::save(DataWriter& writer)
     // save trump suit
     writer.write(mDeck->trumpSuit());
     // save current player index
-    writer.write(playerIndex(mCurrentPlayer));
+    writer.write(mGeneratedIds.index(mCurrentPlayer));
     // save current round index
     writer.write(mRoundIndex);
 
@@ -222,13 +215,13 @@ void Engine::save(DataWriter& writer)
     writer.write(mAttackers.size());
     if (!mAttackers.empty()) {
         for (std::vector<const PlayerId*>::iterator it = mAttackers.begin(); it != mAttackers.end(); ++it) {
-            writer.write(playerIndex(*it));
+            writer.write(mGeneratedIds.index(*it));
         }
         assert(mDefender);
-        writer.write(playerIndex(mDefender));
+        writer.write(mGeneratedIds.index(mDefender));
         writer.write(mPassedCounter);
         assert(mCurrentRoundAttackerId);
-        writer.write(playerIndex(mCurrentRoundAttackerId));
+        writer.write(mGeneratedIds.index(mCurrentRoundAttackerId));
         writer.write(mTableCards.attackCards().begin(), mTableCards.attackCards().end());
         writer.write(mTableCards.defendCards().begin(), mTableCards.defendCards().end());
     }
@@ -237,7 +230,9 @@ void Engine::save(DataWriter& writer)
     unsigned int observersCount = mGameObservers.size();
     writer.write(observersCount);
     for (std::vector<GameObserver*>::iterator it = mGameObservers.begin(); it != mGameObservers.end(); ++it) {
-        (*it)->write(writer);
+        unsigned int observerDataStart = writer.position();
+        (*it)->save(writer);
+        writer.write(static_cast<unsigned int>(writer.position() - observerDataStart));
     }
     unlock();
 }
@@ -249,6 +244,7 @@ void Engine::init(DataReader& reader, const std::vector<Player*> players, const 
     assert(mGeneratedIds.empty());
     assert(mPlayers.empty());
     assert(!mDeck);
+    assert(mGameObservers.empty());
 
     // read players count
     std::vector<const PlayerId*>::size_type playersCount;
@@ -260,7 +256,7 @@ void Engine::init(DataReader& reader, const std::vector<Player*> players, const 
         add(**it);
     }
 
-    const Card defaultCard(SUIT_CLUBS, RANK_6);
+    const Card defaultCard(SUIT_LAST, RANK_LAST);
     // read each player cards
     for (std::vector<const PlayerId*>::const_iterator it = mGeneratedIds.begin(); it != mGeneratedIds.end(); ++it) {
         CardSet& playerCards = mPlayersCards[*it];
@@ -317,15 +313,26 @@ void Engine::init(DataReader& reader, const std::vector<Player*> players, const 
 
     // append observers
     mGameObservers.insert(mGameObservers.end(), observers.begin(), observers.end());
+
+    std::map<const PlayerId*, unsigned int> playersCards;
+    for (PlayerIds::const_iterator it = mGeneratedIds.begin(); it != mGeneratedIds.end(); ++it) {
+        playersCards[*it] = mPlayersCards[*it].size();
+    }
+    std::for_each(mGameObservers.begin(), mGameObservers.end(), GameRestoredNotification(mGeneratedIds, playersCards, mDeck->size(), mDeck->trumpSuit(), mTableCards));
+
     // initialize observers
     unsigned int savedObservers;
     reader.read(savedObservers);
     assert(savedObservers == mGameObservers.size());
     for (std::vector<GameObserver*>::iterator it = mGameObservers.begin(); it != mGameObservers.end(); ++it) {
+        unsigned int observerDataStart = reader.position();
         (*it)->init(reader);
+        unsigned int actualObserverDataSize = reader.position() - observerDataStart;
+        unsigned int expectedOberverDataSize;
+        reader.read(expectedOberverDataSize);
+        assert(actualObserverDataSize == expectedOberverDataSize);
     }
 
-    std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsRestoredNotification(mTableCards));
 }
 
 void Engine::quit()
@@ -603,15 +610,23 @@ void Engine::CardsReceivedNotification::operator()(GameObserver *observer)
     observer->cardsPickedUp(mPlayerId, mReceivedCards);
 }
 
-Engine::CardsRestoredNotification::CardsRestoredNotification(const TableCards& tableCards)
-    : mTableCards(tableCards)
+Engine::GameRestoredNotification::GameRestoredNotification(const std::vector<const PlayerId*>& playerIds,
+            const std::map<const PlayerId*, unsigned int> playersCards,
+            unsigned int deckCards,
+            const Suit& trumpSuit,
+            const TableCards& tableCards)
+    : mPlayerIds(playerIds)
+    , mPlayersCards(playersCards)
+    , mDeckCards(deckCards)
+    , mTrumpSuit(trumpSuit)
+    , mTableCards(tableCards)
 {
 
 }
 
-void Engine::CardsRestoredNotification::operator ()(GameObserver* observer)
+void Engine::GameRestoredNotification::operator ()(GameObserver* observer)
 {
-    observer->tableCardsRestored(mTableCards.attackCards(), mTableCards.defendCards());
+    observer->gameRestored(mPlayerIds, mPlayersCards, mDeckCards, mTrumpSuit, mTableCards.attackCards(), mTableCards.defendCards());
 }
 
 Engine::CardsLeftNotification::CardsLeftNotification(const CardSet& tableCards)
@@ -622,7 +637,7 @@ Engine::CardsLeftNotification::CardsLeftNotification(const CardSet& tableCards)
 
 void Engine::CardsLeftNotification::operator ()(GameObserver* observer)
 {
-    observer->cardsLeft(mCards);
+    observer->cardsGone(mCards);
 }
 
 

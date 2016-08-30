@@ -20,10 +20,15 @@ public:
     void roundEnded(unsigned int roundIndex);
     void cardsPickedUp(const PlayerId* playerId, const CardSet& cardSet);
     void cardsDealed(const PlayerId* playerId, unsigned int cardsAmount);
-    void cardsLeft(const CardSet& cardSet);
+    void cardsGone(const CardSet& cardSet);
     void cardsDropped(const PlayerId* playerId, const CardSet& cardSet);
-    void tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards);
-    void write(DataWriter& writer);
+    void gameRestored(const std::vector<const PlayerId*>& playerIds,
+        const std::map<const PlayerId*, unsigned int>& playersCards,
+        unsigned int deckCards,
+        const Suit& trumpSuit,
+        const std::vector<Card>& attackCards,
+        const std::vector<Card>& defendCards);
+    void save(DataWriter& writer);
     void init(DataReader& reader);
 
 

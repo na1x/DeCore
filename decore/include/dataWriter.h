@@ -8,6 +8,9 @@ namespace decore
 
 /**
  * @brief Abstract data writer
+ *
+ * Implementation must handle sequential calls to `write` and collect all written data
+ * @see DataReader
  */
 class DataWriter
 {
@@ -34,6 +37,20 @@ public:
             write(&*it, sizeof(*it));
         }
     }
+
+    /**
+     * @brief Returns current position of internal pointer
+     *
+     * Example of expected behavior:
+     *      // position() == 0
+     *      writer.write((char) 0);
+     *      // position() == 1
+     *      writer.write((int) 0);
+     *      // position() == 5 and so on
+     *
+     * @return offset
+     */
+    virtual unsigned int position() const = 0;
 
 protected:
     /**

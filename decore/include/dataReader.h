@@ -6,6 +6,26 @@ namespace decore
 
 /**
  * @brief Abstract data reader
+ *
+ * Implementation must handle sequential calls to `read`.
+ *
+ * DataReader/DataWriter used together to save some state and allow to restore any data from the saved state.
+ *
+ * Exact implementation of the abstractions is a platform specific and out of decore's scope.
+ *
+ * Following use case is assumed:
+ *
+ *      int a = 0, b = 1, c = 2;
+ *      writer.write(a);
+ *      writer.write(b);
+ *      writer.write(c);
+ *
+ *      int d, e, f;
+ *      reader.read(d);
+ *      reader.read(e);
+ *      reader.read(f);
+ * `d`, `e` and `f` should contain 0, 1 and 2 respectively
+ * @see DataWriter
  */
 class DataReader
 {
@@ -35,6 +55,7 @@ public:
         }
     }
 
+    virtual unsigned int position() const = 0;
 protected:
     /**
      * @brief Reads value

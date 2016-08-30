@@ -188,7 +188,6 @@ void SaveRestoreTest::test00()
     players.push_back(&player1);
 
     GameCardsTracker tracker;
-    restored.addGameObserver(tracker);
 
     std::vector<GameObserver*> observers;
     observers.push_back(&tracker);
@@ -208,11 +207,21 @@ void SaveRestoreTest::TestWriter::write(const void* data, unsigned int dataSizeB
     }
 }
 
+unsigned int SaveRestoreTest::TestWriter::position() const
+{
+    return mBytes.size();
+}
+
 SaveRestoreTest::TestReader::TestReader(const std::vector<unsigned char>& bytes)
     : mByteIndex(0)
     , mBytes(bytes)
 {
 
+}
+
+unsigned int SaveRestoreTest::TestReader::position() const
+{
+    return mByteIndex;
 }
 
 void SaveRestoreTest::TestReader::read(void* data, unsigned int dataSizeBytes)

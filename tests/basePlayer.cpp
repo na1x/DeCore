@@ -72,7 +72,7 @@ void BasePlayer::cardsDealed(const PlayerId* playerId, unsigned int cardsAmount)
     (void) cardsAmount;
 }
 
-void BasePlayer::cardsLeft(const CardSet& cardSet)
+void BasePlayer::cardsGone(const CardSet& cardSet)
 {
     (void) cardSet;
 }
@@ -83,13 +83,22 @@ void BasePlayer::cardsDropped(const PlayerId* playerId, const CardSet& cardSet)
     (void) cardSet;
 }
 
-void BasePlayer::tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards)
+void BasePlayer::gameRestored(const std::vector<const PlayerId*>& playerIds,
+        const std::map<const PlayerId*, unsigned int>& playersCards,
+        unsigned int deckCards,
+        const Suit& trumpSuit,
+        const std::vector<Card>& attackCards,
+        const std::vector<Card>& defendCards)
 {
+    (void) playerIds;
+    (void) playersCards;
+    (void) deckCards;
+    (void) trumpSuit;
     (void) attackCards;
     (void) defendCards;
 }
 
-void BasePlayer::write(DataWriter& writer)
+void BasePlayer::save(DataWriter& writer)
 {
     // just save something
     int value = 0;

@@ -42,11 +42,22 @@ unsigned int PlayerCards::size() const
     return mUnknownCards + mKnownCards.size();
 }
 
+unsigned int PlayerCards::unknownCards() const
+{
+    return mUnknownCards;
+}
+
+const CardSet& PlayerCards::knownCards() const
+{
+    return mKnownCards;
+}
+
 void GameCardsTracker::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *>& players)
 {
     mGameCards = cardSet;
     mTrumpSuit = trumpSuit;
     mDeckCardsNumber = cardSet.size();
+    mPlayerIds.insert(mPlayerIds.begin(), players.begin(), players.end());
     for(std::vector<const PlayerId*>::const_iterator it = players.begin(); it != players.end(); ++it) {
         mPlayersCards[*it] = PlayerCards();
     }
@@ -88,7 +99,7 @@ void GameCardsTracker::cardsDealed(const PlayerId* playerId, unsigned int cardsA
     mPlayersCards[playerId].addUnknownCards(cardsAmount);
 }
 
-void GameCardsTracker::cardsLeft(const CardSet &cardSet)
+void GameCardsTracker::cardsGone(const CardSet &cardSet)
 {
     std::for_each(cardSet.begin(), cardSet.end(), CardRemover(mGameCards));
     // the cardSet is left from table cards
@@ -115,22 +126,61 @@ void GameCardsTracker::cardsDropped(const PlayerId* playerId, const CardSet &car
     dst->insert(dst->end(), cards.begin(), cards.end());
 }
 
-void GameCardsTracker::tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards)
+void GameCardsTracker::save(DataWriter& writer)
 {
-    mAttackCards = attackCards;
-    mDefendCards = defendCards;
-}
+    writer.write(mGameCards.begin(), mGameCards.end());
+    writer.write(mTrumpSuit);
 
-void GameCardsTracker::write(DataWriter& writer)
-{
-    assert(false);
-    // TODO: implement
+    unsigned int playersCount = mPlayersCards.size();
+    writer.write(playersCount);
+    for (std::map<const PlayerId*, PlayerCards>::iterator it = mPlayersCards.begin(); it != mPlayersCards.end(); ++it) {
+        writer.write(mPlayerIds.index(it->first));
+        PlayerCards& cards = it->second;
+        writer.write(cards.unknownCards());
+        writer.write(cards.knownCards().begin(), cards.knownCards().end());
+    }
+
+    writer.write(mGoneCards.begin(), mGoneCards.end());
 }
 
 void GameCardsTracker::init(DataReader& reader)
 {
-    assert(false);
-    // TODO: implement
+    const Card defaultCard(SUIT_LAST, RANK_LAST);
+
+    reader.read(mGameCards, defaultCard);
+    reader.read(mTrumpSuit);
+
+    unsigned int playersCount;
+    reader.read(playersCount);
+    while (playersCount--) {
+        unsigned int playerIndex;
+        reader.read(playerIndex);
+        unsigned int unknonwCards;
+        reader.read(unknonwCards);
+        CardSet knownCards;
+        reader.read(knownCards, defaultCard);
+        PlayerCards cards;
+        cards.addCards(knownCards);
+        cards.addUnknownCards(unknonwCards);
+        mPlayersCards[mPlayerIds[playerIndex]] = cards;
+    }
+
+    reader.read(mGoneCards, defaultCard);
+}
+
+void GameCardsTracker::gameRestored(const std::vector<const PlayerId*>& playerIds,
+        const std::map<const PlayerId*, unsigned int>& playersCards,
+        unsigned int deckCards,
+        const Suit& trumpSuit,
+        const std::vector<Card>& attackCards,
+        const std::vector<Card>& defendCards)
+{
+    mPlayerIds.insert(mPlayerIds.begin(), playerIds.begin(), playerIds.end());
+    (void)playersCards; // TODO: use for internal checks
+    mDeckCardsNumber = deckCards;
+    mTrumpSuit = trumpSuit;
+    mAttackCards = attackCards;
+    mDefendCards = defendCards;
 }
 
 const CardSet &GameCardsTracker::gameCards() const

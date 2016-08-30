@@ -7,6 +7,7 @@
 #include "playerId.h"
 #include "cardSet.h"
 #include "gameObserver.h"
+#include "playerIds.h"
 
 /**
  * @mainpage DeCore
@@ -101,7 +102,7 @@ class Engine
      *
      * Stored for cleanup reasons.
      */
-    std::vector<const PlayerId*> mGeneratedIds;
+    PlayerIds mGeneratedIds;
     /**
      * @brief Players added to the game
      *
@@ -341,11 +342,19 @@ private:
     /**
      * @brief std::for_each function
      */
-    class CardsRestoredNotification
+    class GameRestoredNotification
     {
+        const std::vector<const PlayerId*>& mPlayerIds;
+        const std::map<const PlayerId*, unsigned int> mPlayersCards;
+        unsigned int mDeckCards;
+        const Suit& mTrumpSuit;
         const TableCards& mTableCards;
     public:
-        CardsRestoredNotification(const TableCards& tableCards);
+        GameRestoredNotification(const std::vector<const PlayerId*>& playerIds,
+            const std::map<const PlayerId*, unsigned int> playersCards,
+            unsigned int deckCards,
+            const Suit& trumpSuit,
+            const TableCards& tableCards);
         void operator()(GameObserver* observer);
     };
 
@@ -382,13 +391,6 @@ private:
      * @brief Unlocks the instance
      */
     void unlock();
-
-    /**
-     * @brief Returns index of the player in mGeneratedIds by the `id`
-     * @param id player id
-     * @return index
-     */
-    unsigned int playerIndex(const PlayerId* id);
 };
 
 }

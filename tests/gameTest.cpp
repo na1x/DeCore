@@ -607,7 +607,7 @@ void GameTest::Observer::gameStarted(const Suit &trumpSuit, const CardSet &cardS
     mGameCardsCount = mGameCards.size();
 }
 
-void GameTest::Observer::cardsLeft(const CardSet &cardSet)
+void GameTest::Observer::cardsGone(const CardSet &cardSet)
 {
     mGameCardsCount -= cardSet.size();
 }
@@ -653,13 +653,22 @@ void GameTest::Observer::roundEnded(unsigned int roundIndex)
     mCurrentRoundData = NULL;
 }
 
-void GameTest::Observer::tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards)
+void GameTest::Observer::gameRestored(const std::vector<const PlayerId*>& playerIds,
+    const std::map<const PlayerId*, unsigned int>& playersCards,
+    unsigned int deckCards,
+    const Suit& trumpSuit,
+    const std::vector<Card>& attackCards,
+    const std::vector<Card>& defendCards)
 {
+    (void) playerIds;
+    (void) playersCards;
+    (void) deckCards;
+    (void) trumpSuit;
     (void) attackCards;
     (void) defendCards;
 }
 
-void GameTest::Observer::write(DataWriter& writer)
+void GameTest::Observer::save(DataWriter& writer)
 {
     // do nothing
     // actually there is a lot of info to save, but the test does not use save/init cases
@@ -680,9 +689,9 @@ void GameTest::TestPlayer0::gameStarted(const Suit &trumpSuit, const CardSet &ca
     Observer::gameStarted(trumpSuit, cardSet, players);
 }
 
-void GameTest::TestPlayer0::cardsLeft(const CardSet &cardSet)
+void GameTest::TestPlayer0::cardsGone(const CardSet &cardSet)
 {
-    Observer::cardsLeft(cardSet);
+    Observer::cardsGone(cardSet);
 }
 
 void GameTest::TestPlayer0::cardsDropped(const PlayerId *playerId, const CardSet &cardSet)
@@ -700,14 +709,19 @@ void GameTest::TestPlayer0::cardsDealed(const PlayerId *playerId, unsigned int c
     Observer::cardsDealed(playerId, cardsAmount);
 }
 
-void GameTest::TestPlayer0::tableCardsRestored(const std::vector<decore::Card>& attackCards, const std::vector<decore::Card>& defendCards)
+void GameTest::TestPlayer0::gameRestored(const std::vector<const PlayerId*>& playerIds,
+        const std::map<const PlayerId*, unsigned int>& playersCards,
+        unsigned int deckCards,
+        const Suit& trumpSuit,
+        const std::vector<Card>& attackCards,
+        const std::vector<Card>& defendCards)
 {
-    Observer::tableCardsRestored(attackCards, defendCards);
+    Observer::gameRestored(playerIds, playersCards, deckCards, trumpSuit, attackCards, defendCards);
 }
 
-void GameTest::TestPlayer0::write(decore::DataWriter& writer)
+void GameTest::TestPlayer0::save(decore::DataWriter& writer)
 {
-    Observer::write(writer);
+    Observer::save(writer);
 }
 
 void GameTest::TestPlayer0::init(decore::DataReader& reader)

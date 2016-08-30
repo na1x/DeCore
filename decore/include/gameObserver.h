@@ -1,12 +1,13 @@
 #ifndef GAMEOBSERVER_H_INCLUDED
 #define GAMEOBSERVER_H_INCLUDED
 
-#include <suit.h>
 #include <vector>
+#include <map>
 
 #include "card.h"
 #include "dataWriter.h"
 #include "dataReader.h"
+#include "playerId.h"
 
 namespace decore
 {
@@ -38,6 +39,23 @@ public:
      */
     virtual void gameStarted(const Suit& trumpSuit, const CardSet& cardSet, const std::vector<const PlayerId*>& players) = 0;
     /**
+     * @brief Game restored
+     *
+     * Invoked during game restoring before init()
+     * @param playerIds
+     * @param playersCards
+     * @param deckCards
+     * @param trumpSuit
+     * @param attackCards
+     * @param defendCards
+     */
+    virtual void gameRestored(const std::vector<const PlayerId*>& playerIds,
+        const std::map<const PlayerId*, unsigned int>& playersCards,
+        unsigned int deckCards,
+        const Suit& trumpSuit,
+        const std::vector<Card>& attackCards,
+        const std::vector<Card>& defendCards) = 0;
+    /**
      * @brief New round started
      * @param roundIndex index of the started round
      * @param attackers list of attackers' ids
@@ -65,7 +83,7 @@ public:
      * @brief Cards left game
      * @param cardSet cards
      */
-    virtual void cardsLeft(const CardSet& cardSet) = 0;
+    virtual void cardsGone(const CardSet& cardSet) = 0;
     /**
      * @brief Player dropped cards to the table either during attack or defend
      * @param playerId player id
@@ -73,21 +91,19 @@ public:
      */
     virtual void cardsDropped(const PlayerId* playerId, const CardSet& cardSet) = 0;
     /**
-     * @brief Table cards restored
-     *
-     * Invoked during game restoring
-     * @param attackCards
-     * @param defendCards
-     */
-    virtual void tableCardsRestored(const std::vector<Card>& attackCards, const std::vector<Card>& defendCards) = 0;
-    /**
      * @brief Implementation can save its internal data to the `writer`
+     *
+     * Data written to the `writer` will be provided to init() with `reader` parameter
      * @param writer data destination
+     * @see init()
      */
-    virtual void write(DataWriter& writer) = 0;
+    virtual void save(DataWriter& writer) = 0;
     /**
      * @brief Implementation can read its internal data from the `reader`
+     *
+     * Invoked by the engine after gameRestored()
      * @param writer data destination
+     * @see save()
      */
     virtual void init(DataReader& reader) = 0;
 };

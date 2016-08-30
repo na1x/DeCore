@@ -68,7 +68,7 @@ private:
         std::vector<unsigned char> mBytes;
     protected:
         void write(const void* data, unsigned int dataSizeBytes);
-
+        unsigned int position() const;
     };
 
     class TestReader : public DataReader
@@ -80,7 +80,7 @@ private:
 
     protected:
         void read(void* data, unsigned int dataSizeBytes);
-
+        unsigned int position() const;
     };
     static void* attackWaitTestThread(void* data);
 };

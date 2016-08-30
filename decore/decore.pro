@@ -24,7 +24,8 @@ SOURCES += \
     deck.cpp \
     gameCardsTracker.cpp \
     dataWriter.cpp \
-    dataReader.cpp
+    dataReader.cpp \
+    playerIds.cpp
 
 HEADERS += \
     include/card.h \
@@ -39,4 +40,5 @@ HEADERS += \
     include/deck.h \
     include/gameCardsTracker.h \
     include/dataWriter.h \
-    include/dataReader.h
+    include/dataReader.h \
+    include/playerIds.h
