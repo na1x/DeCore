@@ -2,5 +2,7 @@ TEMPLATE = subdirs
 SUBDIRS = decore \
           tests
 
+CONFIG -= qt
 CONFIG += ordered
-app.depends = tests decore
+
+tests.depends = decore

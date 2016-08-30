@@ -28,6 +28,10 @@ class PlayerCards
     unsigned int mUnknownCards;
 public:
     /**
+     * @brief Default ctor
+     */
+    PlayerCards();
+    /**
      * @brief Adds unknown cards
      * @param cardsAmount number of cards
      */
@@ -156,6 +160,12 @@ public:
      * @return the `playerId` cards
      */
     const PlayerCards& playerCards(const PlayerId* playerId) const;
+
+    /**
+     * @brief Returns player ids
+     * @return player ids
+     */
+    const PlayerIds& playerIds() const;
 private:
     /**
      * @brief Function for std::for_each

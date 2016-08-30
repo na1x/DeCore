@@ -24,6 +24,8 @@ public:
 
 private:
 
+    static const unsigned int MAX_CARDS;
+
     class PlayerSyncData
     {
         pthread_mutex_t mMoveMutex;

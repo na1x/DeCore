@@ -5,8 +5,7 @@
 #-------------------------------------------------
 
 CONFIG -= qt
-
-CONFIG+=debug
+CONFIG += debug
 
 TARGET = decore
 TEMPLATE = lib

@@ -18,6 +18,9 @@ class Deck;
  * Game rules is not intended to change so static reference looks OK.
  */
 class Rules {
+
+    static const unsigned int MAX_PLAYER_CARDS;
+
 public:
     /**
      * @brief Returns possible cards for attack move

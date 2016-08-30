@@ -3,8 +3,14 @@
 
 #include "gameCardsTracker.h"
 
-namespace decore {
+namespace decore
+{
 
+PlayerCards::PlayerCards()
+    : mUnknownCards(0)
+{
+
+}
 
 void PlayerCards::addUnknownCards(unsigned int cardsAmount)
 {
@@ -155,13 +161,13 @@ void GameCardsTracker::init(DataReader& reader)
     while (playersCount--) {
         unsigned int playerIndex;
         reader.read(playerIndex);
-        unsigned int unknonwCards;
-        reader.read(unknonwCards);
+        unsigned int unknownCards;
+        reader.read(unknownCards);
         CardSet knownCards;
         reader.read(knownCards, defaultCard);
         PlayerCards cards;
         cards.addCards(knownCards);
-        cards.addUnknownCards(unknonwCards);
+        cards.addUnknownCards(unknownCards);
         mPlayersCards[mPlayerIds[playerIndex]] = cards;
     }
 
@@ -202,6 +208,11 @@ const PlayerCards& GameCardsTracker::playerCards(const PlayerId* playerId) const
 {
     assert(mPlayersCards.find(playerId) != mPlayersCards.end());
     return mPlayersCards.at(playerId);
+}
+
+const PlayerIds& GameCardsTracker::playerIds() const
+{
+    return mPlayerIds;
 }
 
 

@@ -12,6 +12,8 @@
 
 using namespace decore;
 
+const unsigned int SaveRestoreTest::MAX_CARDS = 6;
+
 SaveRestoreTest::AttackWaitPlayer::AttackWaitPlayer(PlayerSyncData& syncData)
     : mSyncData(syncData)
 {
@@ -194,7 +196,44 @@ void SaveRestoreTest::test00()
 
     TestReader reader(savedData.mBytes);
     restored.init(reader, players, observers);
+
+    // check deck size
     CPPUNIT_ASSERT(24 == tracker.deckCards());
+
+    for (PlayerIds::const_iterator it = tracker.playerIds().begin(); it != tracker.playerIds().end(); ++it) {
+        const PlayerCards& playerCards = tracker.playerCards(*it);
+        CPPUNIT_ASSERT(MAX_CARDS == playerCards.unknownCards()); // no moves done yet
+    }
+
+    Deck deck;
+
+    Rank ranks[] = {
+        RANK_6,
+        RANK_7,
+        RANK_8,
+        RANK_9,
+        RANK_10,
+        RANK_JACK,
+        RANK_QUEEN,
+        RANK_KING,
+        RANK_ACE,
+    };
+
+    Suit suits[] = {
+        SUIT_SPADES,
+        SUIT_HEARTS,
+        SUIT_DIAMONDS,
+        SUIT_CLUBS,
+    };
+
+    deck.generate(ranks, ARRAY_SIZE(ranks), suits, ARRAY_SIZE(suits));
+
+    CardSet expectedDeck;
+    expectedDeck.addAll(deck);
+
+    CPPUNIT_ASSERT(36 == tracker.gameCards().size());
+    CPPUNIT_ASSERT(expectedDeck == tracker.gameCards());
+    CPPUNIT_ASSERT(SUIT_CLUBS == tracker.trumpSuit());
 }
 
 void SaveRestoreTest::TestWriter::write(const void* data, unsigned int dataSizeBytes)

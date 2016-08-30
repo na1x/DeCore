@@ -5,16 +5,15 @@
 #-------------------------------------------------
 
 CONFIG -= qt
-
-CONFIG+=debug
+CONFIG += debug
 
 TARGET = tests
-CONFIG   += console
-CONFIG   -= app_bundle
+CONFIG += console
+CONFIG -= app_bundle
 
 QMAKE_CXXFLAGS += -Wall -Wextra
 
-INCLUDEPATH +=  include
+INCLUDEPATH += include
 
 TEMPLATE = app
 

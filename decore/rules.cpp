@@ -6,7 +6,7 @@
 
 namespace decore {
 
-const unsigned int MAX_PLAYER_CARDS = 6;
+const unsigned int Rules::MAX_PLAYER_CARDS = 6;
 
 Rules::AttackCardFilter::AttackCardFilter(const CardSet& playerCards, CardSet& result)
     : mPlayerCards(playerCards)
