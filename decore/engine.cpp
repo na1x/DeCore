@@ -19,6 +19,7 @@ Engine::Engine()
     , mQuit(false)
     , mCurrentRoundAttackerId(NULL)
     , mPassedCounter(0)
+    , mMaxAttackCards(0)
 {
     pthread_mutex_init(&mLock, NULL);
 }
@@ -88,12 +89,12 @@ bool Engine::setDeck(const Deck &deck)
     return true;
 }
 
-void Engine::lock()
+void Engine::lock() const
 {
     pthread_mutex_lock(&mLock);
 }
 
-void Engine::unlock()
+void Engine::unlock() const
 {
     pthread_mutex_unlock(&mLock);
 }
@@ -115,15 +116,18 @@ bool Engine::playRound()
     }
 
     lock();
-    // prepare round data
-    // pick current player as first attacker
-    mAttackers.push_back(mCurrentPlayer);
-    // pick next player as defender
-    mDefender = Rules::pickNext(mGeneratedIds, mCurrentPlayer);
-    // gather rest players as additional attackers
-    const PlayerId* attacker = mDefender;
-    while((attacker = Rules::pickNext(mGeneratedIds, attacker)) != mCurrentPlayer) {
-        mAttackers.push_back(attacker);
+
+    if (mAttackers.empty()) {
+        // prepare round data
+        // pick current player as first attacker
+        mAttackers.push_back(mCurrentPlayer);
+        // pick next player as defender
+        mDefender = Rules::pickNext(mGeneratedIds, mCurrentPlayer);
+        // gather rest players as additional attackers
+        const PlayerId* attacker = mDefender;
+        while((attacker = Rules::pickNext(mGeneratedIds, attacker)) != mCurrentPlayer) {
+            mAttackers.push_back(attacker);
+        }
     }
 
     unlock();
@@ -185,7 +189,7 @@ bool Engine::gameEnded() const
     return playersWithCards < 2;
 }
 
-void Engine::save(DataWriter& writer)
+void Engine::save(DataWriter& writer) const
 {
     if (!mDeck || !mCurrentPlayer) {
         // save called too early - nothing to save actually because the game has not been even started
@@ -214,7 +218,7 @@ void Engine::save(DataWriter& writer)
     // save attackers
     writer.write(mAttackers.size());
     if (!mAttackers.empty()) {
-        for (std::vector<const PlayerId*>::iterator it = mAttackers.begin(); it != mAttackers.end(); ++it) {
+        for (std::vector<const PlayerId*>::const_iterator it = mAttackers.begin(); it != mAttackers.end(); ++it) {
             writer.write(mGeneratedIds.index(*it));
         }
         assert(mDefender);
@@ -224,12 +228,13 @@ void Engine::save(DataWriter& writer)
         writer.write(mGeneratedIds.index(mCurrentRoundAttackerId));
         writer.write(mTableCards.attackCards().begin(), mTableCards.attackCards().end());
         writer.write(mTableCards.defendCards().begin(), mTableCards.defendCards().end());
+        writer.write(mMaxAttackCards);
     }
 
     // save observers data
     unsigned int observersCount = mGameObservers.size();
     writer.write(observersCount);
-    for (std::vector<GameObserver*>::iterator it = mGameObservers.begin(); it != mGameObservers.end(); ++it) {
+    for (std::vector<GameObserver*>::const_iterator it = mGameObservers.begin(); it != mGameObservers.end(); ++it) {
         unsigned int observerDataStart = writer.position();
         (*it)->save(writer);
         writer.write(static_cast<unsigned int>(writer.position() - observerDataStart));
@@ -309,6 +314,7 @@ void Engine::init(DataReader& reader, const std::vector<Player*> players, const 
         for (std::vector<Card>::iterator it = attackCards.begin(); it != attackCards.end(); ++it) {
             mTableCards.addDefendCard(*it);
         }
+        reader.read(mMaxAttackCards);
     }
 
     // append observers
@@ -422,13 +428,20 @@ void Engine::TableCards::clear()
 
 bool Engine::playCurrentRound()
 {
+#define CHECK_QUIT \
+if (quit) { \
+    return false; \
+}
+
     // deal cards
     dealCards();
 
     lock();
-    mCurrentRoundAttackerId = mAttackers[0];
-    mPassedCounter = 0;
-    unlock();
+
+    if (!mCurrentRoundAttackerId) {
+        mCurrentRoundAttackerId = mAttackers[0];
+        mPassedCounter = 0;
+    }
 
     CardSet& defenderCards = mPlayersCards[mDefender];
     Player& defender = *mPlayers[mDefender];
@@ -436,16 +449,15 @@ bool Engine::playCurrentRound()
     bool defendFailed = false;
     bool quit = false;
 
-#define CHECK_QUIT \
-if (quit) { \
-    return false; \
-}
+    if (!mMaxAttackCards) {
+        mMaxAttackCards = Rules::maxAttackCards(defenderCards.size());
+    }
 
-    const unsigned int maxAttackCards = Rules::maxAttackCards(defenderCards.size());
+    unlock();
 
     for (;;) {
 
-        if (mTableCards.attackCards().size() == maxAttackCards) {
+        if (mTableCards.attackCards().size() == mMaxAttackCards) {
             // defender has no more cards - defend succeeded
             break;
         }
@@ -529,14 +541,18 @@ if (quit) { \
         lock();
         defenderCards.insert(mTableCards.all().begin(), mTableCards.all().end());
         defender.cardsUpdated(defenderCards);
-        mCurrentRoundAttackerId = NULL;
-        quit = mQuit;
         unlock();
         CHECK_QUIT;
         std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsReceivedNotification(mDefender, mTableCards.all()));
     } else {
         std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsLeftNotification(mTableCards.all()));
     }
+
+    // cleanup
+    lock();
+    mCurrentRoundAttackerId = NULL;
+    mMaxAttackCards = 0;
+    unlock();
 
     return !defendFailed;
 }

@@ -58,6 +58,13 @@ const CardSet& PlayerCards::knownCards() const
     return mKnownCards;
 }
 
+GameCardsTracker::GameCardsTracker()
+    : mDefender(NULL)
+    , mLastRoundIndex(0)
+{
+
+}
+
 void GameCardsTracker::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *>& players)
 {
     mGameCards = cardSet;
@@ -69,18 +76,21 @@ void GameCardsTracker::gameStarted(const Suit &trumpSuit, const CardSet &cardSet
     }
 }
 
-void GameCardsTracker::roundStarted(unsigned int, const std::vector<const PlayerId*> attackers, const PlayerId* defender)
+void GameCardsTracker::roundStarted(unsigned int roundIndex, const std::vector<const PlayerId*> attackers, const PlayerId* defender)
 {
     mAttackers = attackers;
     mDefender = defender;
+    mLastRoundIndex = roundIndex;
 }
 
-void GameCardsTracker::roundEnded(unsigned int )
+void GameCardsTracker::roundEnded(unsigned int roundIndex)
 {
     mAttackers.clear();
     mDefender = NULL;
     mAttackCards.clear();
     mDefendCards.clear();
+    assert(mLastRoundIndex == roundIndex);
+    mLastRoundIndex = roundIndex;
 }
 
 void GameCardsTracker::cardsPickedUp(const PlayerId* playerId, const CardSet &cards)
@@ -117,6 +127,7 @@ void GameCardsTracker::cardsGone(const CardSet &cardSet)
                 || std::find(mDefendCards.begin(), mDefendCards.end(), *it) != mDefendCards.end());
     }
 #endif // NDEBUG
+    mGoneCards.insert(cardSet.begin(), cardSet.end());
 }
 
 void GameCardsTracker::cardsDropped(const PlayerId* playerId, const CardSet &cards)
@@ -147,6 +158,7 @@ void GameCardsTracker::save(DataWriter& writer)
     }
 
     writer.write(mGoneCards.begin(), mGoneCards.end());
+    writer.write(mLastRoundIndex);
 }
 
 void GameCardsTracker::init(DataReader& reader)
@@ -172,6 +184,7 @@ void GameCardsTracker::init(DataReader& reader)
     }
 
     reader.read(mGoneCards, defaultCard);
+    reader.read(mLastRoundIndex);
 }
 
 void GameCardsTracker::gameRestored(const std::vector<const PlayerId*>& playerIds,
@@ -215,6 +228,15 @@ const PlayerIds& GameCardsTracker::playerIds() const
     return mPlayerIds;
 }
 
+const CardSet& GameCardsTracker::goneCards() const
+{
+    return mGoneCards;
+}
+
+unsigned int GameCardsTracker::lastRoundIndex() const
+{
+    return mLastRoundIndex;
+}
 
 GameCardsTracker::CardRemover::CardRemover(CardSet &cards)
     : mCards(cards)

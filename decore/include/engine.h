@@ -154,7 +154,7 @@ class Engine
     /**
      * @brief Internal data synchronization lock
      */
-    pthread_mutex_t mLock;
+    mutable pthread_mutex_t mLock;
 
     /**
      * @brief Quit flag
@@ -170,7 +170,10 @@ class Engine
      * @brief Current round state: "passed" counter
      */
     unsigned int mPassedCounter;
-
+    /**
+     * @brief Current round state: max cards for attack (can't be bigger then defender's cards amount)
+     */
+    unsigned int mMaxAttackCards;
 public:
     /**
      * @brief Ctor
@@ -228,7 +231,7 @@ public:
      * Saved data could be used later to construct the engine from the data so allowing to resume the game.
      * @param writer writer to save state
      */
-    void save(DataWriter& writer);
+    void save(DataWriter& writer) const;
 
     /**
      * @brief Initializes the instance from the 'reader'
@@ -386,11 +389,11 @@ private:
     /**
      * @brief Locks the instance
      */
-    void lock();
+    void lock() const;
     /**
      * @brief Unlocks the instance
      */
-    void unlock();
+    void unlock() const;
 };
 
 }

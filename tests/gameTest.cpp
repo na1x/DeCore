@@ -263,6 +263,7 @@ void GameTest::testOneRound02()
 
     CPPUNIT_ASSERT(engine.playRound());
     CPPUNIT_ASSERT(!engine.playRound());
+    CPPUNIT_ASSERT(1 == tracker.lastRoundIndex());
     CPPUNIT_ASSERT(engine.getLoser() == player1.mId);
     CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->empty());
     CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->size() == 1);

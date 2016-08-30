@@ -123,7 +123,14 @@ class GameCardsTracker : public GameObserver
      * @brief The cards which left the game
      */
     CardSet mGoneCards;
+    /**
+     * @brief Last round index
+     */
+    unsigned int mLastRoundIndex;
+
 public:
+    GameCardsTracker();
+
     void gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *>& players);
     void roundStarted(unsigned int roundIndex, const std::vector<const PlayerId *> attackers, const PlayerId *defender);
     void roundEnded(unsigned int roundIndex);
@@ -139,6 +146,7 @@ public:
         const Suit& trumpSuit,
         const std::vector<Card>& attackCards,
         const std::vector<Card>& defendCards);
+
     /**
      * @brief Returns cards in the game
      * @return cards
@@ -166,6 +174,18 @@ public:
      * @return player ids
      */
     const PlayerIds& playerIds() const;
+
+    /**
+     * @brief Returns gone cards
+     * @return gone cards
+     */
+    const CardSet& goneCards() const;
+
+    /**
+     * @brief Returns last round index
+     * @return last round index
+     */
+    unsigned int lastRoundIndex() const;
 private:
     /**
      * @brief Function for std::for_each

@@ -197,6 +197,7 @@ void SaveRestoreTest::test00()
     TestReader reader(savedData.mBytes);
     restored.init(reader, players, observers);
 
+    CPPUNIT_ASSERT(0 == tracker.lastRoundIndex());
     // check deck size
     CPPUNIT_ASSERT(24 == tracker.deckCards());
 
@@ -234,6 +235,11 @@ void SaveRestoreTest::test00()
     CPPUNIT_ASSERT(36 == tracker.gameCards().size());
     CPPUNIT_ASSERT(expectedDeck == tracker.gameCards());
     CPPUNIT_ASSERT(SUIT_CLUBS == tracker.trumpSuit());
+
+    // continue game
+    CPPUNIT_ASSERT(restored.playRound());
+
+    CPPUNIT_ASSERT(6 == tracker.goneCards().size());
 }
 
 void SaveRestoreTest::TestWriter::write(const void* data, unsigned int dataSizeBytes)
