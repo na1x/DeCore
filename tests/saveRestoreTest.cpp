@@ -1,6 +1,4 @@
-#include <stdlib.h>
 #include <cassert>
-#include <iomanip>
 
 #include "saveRestoreTest.h"
 #include "engine.h"
@@ -14,18 +12,43 @@ using namespace decore;
 
 const unsigned int SaveRestoreTest::MAX_CARDS = 6;
 
-SaveRestoreTest::AttackWaitPlayer::AttackWaitPlayer(PlayerSyncData& syncData)
+SaveRestoreTest::ThreadData::ThreadData(Player& player0, Player& player1, PlayerSyncData& syncData)
+    : mPlayer0(player0)
+    , mPlayer1(player1)
+    , mSyncData(syncData)
+{
+
+}
+
+
+SaveRestoreTest::AttackWaitPlayer::AttackWaitPlayer(PlayerSyncData& syncData, unsigned int moveCount)
     : mSyncData(syncData)
+    , mMoveCount(moveCount)
 {
 
 }
 
 const Card& SaveRestoreTest::AttackWaitPlayer::attack(const PlayerId* playerId, const CardSet& cardSet)
 {
-    (void) playerId;
-    mSyncData.signalThread();
-    mSyncData.waitForMove();
-    return *cardSet.begin();
+    processMove();
+    return BasePlayer::attack(playerId, cardSet);
+}
+
+const Card* SaveRestoreTest::AttackWaitPlayer::pitch(const PlayerId* playerId, const CardSet& cardSet)
+{
+    processMove();
+    return BasePlayer::pitch(playerId, cardSet);
+}
+
+void SaveRestoreTest::AttackWaitPlayer::processMove()
+{
+    assert(mMoveCount);
+    mMoveCount--;
+    // notify only when mMoveCount moves performed
+    if (!mMoveCount) {
+        mSyncData.signalThread();
+        mSyncData.waitForMove();
+    }
 }
 
 SaveRestoreTest::DefendWaitPlayer::DefendWaitPlayer(PlayerSyncData& syncData)
@@ -106,15 +129,12 @@ Engine* SaveRestoreTest::PlayerSyncData::waitForThread()
 
 void* SaveRestoreTest::attackWaitTestThread(void* data)
 {
-    PlayerSyncData& syncData = *static_cast<PlayerSyncData*>(data);
+    ThreadData& threadData = *static_cast<ThreadData*>(data);
 
     Engine engine;
 
-    AttackWaitPlayer player0(syncData);
-    BasePlayer player1;
-
-    engine.add(player0);
-    engine.add(player1);
+    engine.add(threadData.mPlayer0);
+    engine.add(threadData.mPlayer1);
 
     GameCardsTracker observer;
 
@@ -122,32 +142,13 @@ void* SaveRestoreTest::attackWaitTestThread(void* data)
 
     Deck deck;
 
-    Rank ranks[] = {
-        RANK_6,
-        RANK_7,
-        RANK_8,
-        RANK_9,
-        RANK_10,
-        RANK_JACK,
-        RANK_QUEEN,
-        RANK_KING,
-        RANK_ACE,
-    };
-
-    Suit suits[] = {
-        SUIT_SPADES,
-        SUIT_HEARTS,
-        SUIT_DIAMONDS,
-        SUIT_CLUBS,
-    };
-
-    deck.generate(ranks, ARRAY_SIZE(ranks), suits, ARRAY_SIZE(suits));
+    generate(deck);
 
     engine.setDeck(deck);
 
-    syncData.setEngine(&engine);
+    threadData.mSyncData.setEngine(&engine);
 
-    engine.playRound();
+    while (engine.playRound());
 
     return NULL;
 }
@@ -163,7 +164,12 @@ void SaveRestoreTest::test00()
 
     PlayerSyncData syncData;
 
-    pthread_create(&engineThread, NULL, attackWaitTestThread, &syncData);
+    AttackWaitPlayer player0(syncData, 1);
+    BasePlayer player1;
+
+    ThreadData threadData(player0, player1, syncData);
+
+    pthread_create(&engineThread, NULL, attackWaitTestThread, &threadData);
 
     Engine* engine = syncData.waitForThread();
     CPPUNIT_ASSERT(engine);
@@ -176,18 +182,18 @@ void SaveRestoreTest::test00()
     // request quit
     engine->quit();
     // ping player one to return from "attack" method
-
     syncData.signalMove();
 
     pthread_join(engineThread, NULL);
 
     CPPUNIT_ASSERT(!savedData.mBytes.empty());
 
+    // create new engine from the saved data and validate
     Engine restored;
-    BasePlayer player0, player1;
-    std::vector<Player*> players;
-    players.push_back(&player0);
-    players.push_back(&player1);
+    BasePlayer restoredPlayer0, restoredPlayer1;
+    std::vector<Player*> restoredPlayers;
+    restoredPlayers.push_back(&restoredPlayer0);
+    restoredPlayers.push_back(&restoredPlayer1);
 
     GameCardsTracker tracker;
 
@@ -195,7 +201,7 @@ void SaveRestoreTest::test00()
     observers.push_back(&tracker);
 
     TestReader reader(savedData.mBytes);
-    restored.init(reader, players, observers);
+    restored.init(reader, restoredPlayers, observers);
 
     CPPUNIT_ASSERT(0 == tracker.lastRoundIndex());
     // check deck size
@@ -208,26 +214,7 @@ void SaveRestoreTest::test00()
 
     Deck deck;
 
-    Rank ranks[] = {
-        RANK_6,
-        RANK_7,
-        RANK_8,
-        RANK_9,
-        RANK_10,
-        RANK_JACK,
-        RANK_QUEEN,
-        RANK_KING,
-        RANK_ACE,
-    };
-
-    Suit suits[] = {
-        SUIT_SPADES,
-        SUIT_HEARTS,
-        SUIT_DIAMONDS,
-        SUIT_CLUBS,
-    };
-
-    deck.generate(ranks, ARRAY_SIZE(ranks), suits, ARRAY_SIZE(suits));
+    generate(deck);
 
     CardSet expectedDeck;
     expectedDeck.addAll(deck);
@@ -280,3 +267,28 @@ void SaveRestoreTest::TestReader::read(void* data, unsigned int dataSizeBytes)
         *dataPtr++ = mBytes[mByteIndex++];
     }
 }
+
+void SaveRestoreTest::generate(Deck& deck)
+{
+    Rank ranks[] = {
+        RANK_6,
+        RANK_7,
+        RANK_8,
+        RANK_9,
+        RANK_10,
+        RANK_JACK,
+        RANK_QUEEN,
+        RANK_KING,
+        RANK_ACE,
+    };
+
+    Suit suits[] = {
+        SUIT_SPADES,
+        SUIT_HEARTS,
+        SUIT_DIAMONDS,
+        SUIT_CLUBS,
+    };
+
+    deck.generate(ranks, ARRAY_SIZE(ranks), suits, ARRAY_SIZE(suits));
+}
+

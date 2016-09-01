@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <assert.h>
+#include <stdbool.h>
 
 #include "engine.h"
 #include "player.h"
@@ -132,11 +133,7 @@ bool Engine::playRound()
 
     unlock();
 
-    std::for_each(mGameObservers.begin(), mGameObservers.end(), RoundStartNotification(mAttackers, mDefender, mRoundIndex));
-
     bool defended = playCurrentRound();
-
-    std::for_each(mGameObservers.begin(), mGameObservers.end(), RoundEndNotification(mRoundIndex));
 
     lock();
     mRoundIndex++;
@@ -173,6 +170,9 @@ void Engine::addGameObserver(GameObserver &observer)
 
 bool Engine::gameEnded() const
 {
+    if (mQuit.get()) {
+        return true;
+    }
     // check no game cards left
     // check that less than one player have cards
     if (!mDeck->empty()) {
@@ -343,9 +343,7 @@ void Engine::init(DataReader& reader, const std::vector<Player*> players, const 
 
 void Engine::quit()
 {
-    lock();
-    mQuit = true;
-    unlock();
+    mQuit.set(true);
 }
 
 Engine::PlayerIdImplementation::PlayerIdImplementation(unsigned int id)
@@ -429,9 +427,11 @@ void Engine::TableCards::clear()
 bool Engine::playCurrentRound()
 {
 #define CHECK_QUIT \
-if (quit) { \
+if (mQuit.get()) { \
     return false; \
 }
+
+    std::for_each(mGameObservers.begin(), mGameObservers.end(), RoundStartNotification(mAttackers, mDefender, mRoundIndex));
 
     // deal cards
     dealCards();
@@ -447,7 +447,6 @@ if (quit) { \
     Player& defender = *mPlayers[mDefender];
 
     bool defendFailed = false;
-    bool quit = false;
 
     if (!mMaxAttackCards) {
         mMaxAttackCards = Rules::maxAttackCards(defenderCards.size());
@@ -474,20 +473,21 @@ if (quit) { \
             attackCardPtr = currentAttacker.pitch(mDefender, attackCards);
         }
 
+        // check if quit requested and only after that transfer move to defender
+        CHECK_QUIT;
+
         if (attackCards.empty() || !attackCardPtr) {
-            // player skipped the move
             lock();
+            // player skipped the move - pick next attacker
             mCurrentRoundAttackerId = Rules::pickNext(mAttackers, mCurrentRoundAttackerId);
-            quit = mQuit;
-            unlock();
-
-            CHECK_QUIT;
-
+            // if more than one attacker and we have first attacker again - reset pass counter
             if (mAttackers.size() > 1 && mCurrentRoundAttackerId == mAttackers[0]) {
                 mPassedCounter = 0;
             }
+            mPassedCounter++;
+            unlock();
 
-            if (++mPassedCounter == mAttackers.size()) {
+            if (mPassedCounter == mAttackers.size()) {
                 // all attackers "passed" - round ended
                 break;
             }
@@ -510,7 +510,6 @@ if (quit) { \
         lock();
         mTableCards.addAttackCard(attackCard);
         mPlayersCards[mCurrentRoundAttackerId].erase(attackCard);
-        quit = mQuit;
         unlock();
 
         CHECK_QUIT;
@@ -530,7 +529,6 @@ if (quit) { \
             lock();
             mTableCards.addDefendCard(*defendCardPtr);
             defenderCards.erase(*defendCardPtr);
-            quit = mQuit;
             unlock();
             CHECK_QUIT;
             std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsDroppedNotification(mDefender, *defendCardPtr));
@@ -553,6 +551,9 @@ if (quit) { \
     mCurrentRoundAttackerId = NULL;
     mMaxAttackCards = 0;
     unlock();
+    CHECK_QUIT;
+
+    std::for_each(mGameObservers.begin(), mGameObservers.end(), RoundEndNotification(mRoundIndex));
 
     return !defendFailed;
 }

@@ -8,6 +8,7 @@
 #include "cardSet.h"
 #include "gameObserver.h"
 #include "playerIds.h"
+#include "atomic.h"
 
 /**
  * @mainpage DeCore
@@ -159,7 +160,7 @@ class Engine
     /**
      * @brief Quit flag
      */
-    bool mQuit;
+    Atomic<bool> mQuit;
 
     /**
      * @brief Current round state: current attacker

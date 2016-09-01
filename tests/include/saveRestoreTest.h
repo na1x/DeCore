@@ -37,6 +37,7 @@ private:
         Engine* mEngine;
 
     public:
+
         PlayerSyncData();
         ~PlayerSyncData();
 
@@ -48,12 +49,25 @@ private:
         Engine* waitForThread();
     };
 
+    class ThreadData
+    {
+    public:
+        Player& mPlayer0;
+        Player& mPlayer1;
+        PlayerSyncData& mSyncData;
+        ThreadData(Player& player0, Player& player1, PlayerSyncData& syncData);
+    };
+
     class AttackWaitPlayer : public BasePlayer
     {
         PlayerSyncData& mSyncData;
+        unsigned int mMoveCount;
     public:
-        AttackWaitPlayer(PlayerSyncData& syncData);
+        AttackWaitPlayer(PlayerSyncData& syncData, unsigned int moveCount);
         const Card& attack(const PlayerId* playerId, const CardSet& cardSet);
+        const Card* pitch(const PlayerId* playerId, const CardSet& cardSet);
+    private:
+        void processMove();
     };
 
     class DefendWaitPlayer : public BasePlayer
@@ -85,6 +99,7 @@ private:
         unsigned int position() const;
     };
     static void* attackWaitTestThread(void* data);
+    static void generate(Deck& deck);
 };
 
 #endif /* SAVERESTORETEST_H */

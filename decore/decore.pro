@@ -40,4 +40,5 @@ HEADERS += \
     include/gameCardsTracker.h \
     include/dataWriter.h \
     include/dataReader.h \
-    include/playerIds.h
+    include/playerIds.h \
+    include/atomic.h
