@@ -127,7 +127,7 @@ Engine* SaveRestoreTest::PlayerSyncData::waitForThread()
     return mEngine;
 }
 
-void* SaveRestoreTest::attackWaitTestThread(void* data)
+void* SaveRestoreTest::testThread(void* data)
 {
     ThreadData& threadData = *static_cast<ThreadData*>(data);
 
@@ -153,8 +153,7 @@ void* SaveRestoreTest::attackWaitTestThread(void* data)
     return NULL;
 }
 
-void SaveRestoreTest::test00()
-{
+void SaveRestoreTest::test(Player& player0, Player& player1, Player& restoredPlayer0, Player& restoredPlayer1, PlayerSyncData& syncData, GameCardsTracker& restoredTracker, Engine& restored) {
     // start game in separate thread
     // save the game and terminate
     // create new game from saved data
@@ -162,14 +161,9 @@ void SaveRestoreTest::test00()
 
     pthread_t engineThread;
 
-    PlayerSyncData syncData;
-
-    AttackWaitPlayer player0(syncData, 1);
-    BasePlayer player1;
-
     ThreadData threadData(player0, player1, syncData);
 
-    pthread_create(&engineThread, NULL, attackWaitTestThread, &threadData);
+    pthread_create(&engineThread, NULL, testThread, &threadData);
 
     Engine* engine = syncData.waitForThread();
     CPPUNIT_ASSERT(engine);
@@ -189,42 +183,158 @@ void SaveRestoreTest::test00()
     CPPUNIT_ASSERT(!savedData.mBytes.empty());
 
     // create new engine from the saved data and validate
-    Engine restored;
-    BasePlayer restoredPlayer0, restoredPlayer1;
     std::vector<Player*> restoredPlayers;
     restoredPlayers.push_back(&restoredPlayer0);
     restoredPlayers.push_back(&restoredPlayer1);
 
-    GameCardsTracker tracker;
-
     std::vector<GameObserver*> observers;
-    observers.push_back(&tracker);
+    observers.push_back(&restoredTracker);
 
     TestReader reader(savedData.mBytes);
     restored.init(reader, restoredPlayers, observers);
 
-    CPPUNIT_ASSERT(0 == tracker.lastRoundIndex());
+    CPPUNIT_ASSERT(0 == restoredTracker.lastRoundIndex());
     // check deck size
-    CPPUNIT_ASSERT(24 == tracker.deckCards());
+    CPPUNIT_ASSERT(24 == restoredTracker.deckCards());
+
+    Deck deck;
+    generate(deck);
+    CardSet expectedDeck;
+    expectedDeck.addAll(deck);
+
+    CPPUNIT_ASSERT(expectedDeck == restoredTracker.gameCards());
+    CPPUNIT_ASSERT(SUIT_CLUBS == restoredTracker.trumpSuit());
+}
+
+void SaveRestoreTest::checkNoDeal(std::vector<BasePlayer*> players)
+{
+    // check that there was no deal and amount of player cards always decremented
+    for (std::vector<BasePlayer*>::iterator it = players.begin(); it != players.end(); ++it) {
+        BasePlayer& player = **it;
+        unsigned int maxCards = -1;
+        for (unsigned int i = 0; i < player.cardSets(); i++) {
+            CPPUNIT_ASSERT(maxCards > player.cards(i).size());
+            maxCards = player.cards(i).size();
+        }
+    }
+}
+
+void SaveRestoreTest::test00()
+{
+    // attacker sleeps on first attack move
+    // save game while attacker waits and save
+    // restore the game and check
+    PlayerSyncData syncData;
+    AttackWaitPlayer player0(syncData, 1);
+    BasePlayer player1;
+
+    BasePlayer restoredPlayer0, restoredPlayer1;
+    Engine restored;
+    GameCardsTracker tracker;
+
+    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored);
 
     for (PlayerIds::const_iterator it = tracker.playerIds().begin(); it != tracker.playerIds().end(); ++it) {
         const PlayerCards& playerCards = tracker.playerCards(*it);
         CPPUNIT_ASSERT(MAX_CARDS == playerCards.unknownCards()); // no moves done yet
     }
 
-    Deck deck;
+    CPPUNIT_ASSERT(1 == restoredPlayer0.cardSets());
+    CPPUNIT_ASSERT(1 == restoredPlayer1.cardSets());
 
-    generate(deck);
-
-    CardSet expectedDeck;
-    expectedDeck.addAll(deck);
+    CPPUNIT_ASSERT(restoredPlayer0.cards(restoredPlayer0.cardSets() - 1).size() == MAX_CARDS);
+    CPPUNIT_ASSERT(restoredPlayer1.cards(restoredPlayer1.cardSets() - 1).size() == MAX_CARDS);
 
     CPPUNIT_ASSERT(36 == tracker.gameCards().size());
-    CPPUNIT_ASSERT(expectedDeck == tracker.gameCards());
-    CPPUNIT_ASSERT(SUIT_CLUBS == tracker.trumpSuit());
 
     // continue game
     CPPUNIT_ASSERT(restored.playRound());
+
+    std::vector<BasePlayer*> restoredPlayers;
+    restoredPlayers.push_back(&restoredPlayer0);
+    restoredPlayers.push_back(&restoredPlayer1);
+
+    checkNoDeal(restoredPlayers);
+
+    CPPUNIT_ASSERT(6 == tracker.goneCards().size());
+}
+
+void SaveRestoreTest::test01()
+{
+    // attacker sleeps on second attack move
+    // save game while attacker waits and save
+    // restore the game and check
+    PlayerSyncData syncData;
+    AttackWaitPlayer player0(syncData, 2);
+    BasePlayer player1;
+
+    BasePlayer restoredPlayer0, restoredPlayer1;
+    Engine restored;
+    GameCardsTracker tracker;
+
+    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored);
+
+    for (PlayerIds::const_iterator it = tracker.playerIds().begin(); it != tracker.playerIds().end(); ++it) {
+        const PlayerCards& playerCards = tracker.playerCards(*it);
+        CPPUNIT_ASSERT(MAX_CARDS - 1 == playerCards.unknownCards()); // no moves done yet
+    }
+
+    CPPUNIT_ASSERT(2 == restoredPlayer0.cardSets());
+    CPPUNIT_ASSERT(2 == restoredPlayer1.cardSets());
+
+    CPPUNIT_ASSERT(restoredPlayer0.cards(restoredPlayer0.cardSets() - 1).size() == MAX_CARDS - 1);
+    CPPUNIT_ASSERT(restoredPlayer1.cards(restoredPlayer1.cardSets() - 1).size() == MAX_CARDS - 1);
+
+    CPPUNIT_ASSERT(36 == tracker.gameCards().size());
+
+    // continue game
+    CPPUNIT_ASSERT(restored.playRound());
+
+    std::vector<BasePlayer*> restoredPlayers;
+    restoredPlayers.push_back(&restoredPlayer0);
+    restoredPlayers.push_back(&restoredPlayer1);
+
+    checkNoDeal(restoredPlayers);
+
+    CPPUNIT_ASSERT(6 == tracker.goneCards().size());
+}
+
+void SaveRestoreTest::test02()
+{
+    // attacker sleeps on second attack move
+    // save game while attacker waits and save
+    // restore the game and check
+    PlayerSyncData syncData;
+    AttackWaitPlayer player0(syncData, 3);
+    BasePlayer player1;
+
+    BasePlayer restoredPlayer0, restoredPlayer1;
+    Engine restored;
+    GameCardsTracker tracker;
+
+    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored);
+
+    for (PlayerIds::const_iterator it = tracker.playerIds().begin(); it != tracker.playerIds().end(); ++it) {
+        const PlayerCards& playerCards = tracker.playerCards(*it);
+        CPPUNIT_ASSERT(MAX_CARDS - 2 == playerCards.unknownCards()); // no moves done yet
+    }
+
+    CPPUNIT_ASSERT(3 == restoredPlayer0.cardSets());
+    CPPUNIT_ASSERT(3 == restoredPlayer1.cardSets());
+
+    CPPUNIT_ASSERT(restoredPlayer0.cards(restoredPlayer0.cardSets() - 1).size() == MAX_CARDS - 2);
+    CPPUNIT_ASSERT(restoredPlayer1.cards(restoredPlayer1.cardSets() - 1).size() == MAX_CARDS - 2);
+
+    CPPUNIT_ASSERT(36 == tracker.gameCards().size());
+
+    // continue game
+    CPPUNIT_ASSERT(restored.playRound());
+
+    std::vector<BasePlayer*> restoredPlayers;
+    restoredPlayers.push_back(&restoredPlayer0);
+    restoredPlayers.push_back(&restoredPlayer1);
+
+    checkNoDeal(restoredPlayers);
 
     CPPUNIT_ASSERT(6 == tracker.goneCards().size());
 }

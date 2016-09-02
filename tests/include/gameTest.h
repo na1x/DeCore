@@ -4,6 +4,7 @@
 #include "gameObserver.h"
 #include "cardSet.h"
 #include "player.h"
+#include "basePlayer.h"
 
 class GameTest: public CppUnit::TestFixture
 {
@@ -75,22 +76,12 @@ private:
         RoundData* mCurrentRoundData;
     };
 
-    class TestPlayer0 : public decore::Player, public Observer
+    class TestPlayer0 : public BasePlayer, public Observer
     {
     public:
-        const decore::PlayerId* mId;
-        std::vector<decore::CardSet> mPlayerCards;
 
-        TestPlayer0();
-        void idCreated(const decore::PlayerId *id);
-        const decore::Card &attack(const decore::PlayerId *, const decore::CardSet &cardSet);
-        const decore::Card *pitch(const decore::PlayerId *, const decore::CardSet &cardSet);
-        const decore::Card *defend(const decore::PlayerId *, const decore::Card& card, const decore::CardSet &cardSet);
-        void cardsUpdated(const decore::CardSet &cardSet);
         void roundStarted(unsigned int roundIndex, const std::vector<const decore::PlayerId *> attackers, const decore::PlayerId *defender);
         void roundEnded(unsigned int roundIndex);
-        void cardsRestored(const decore::CardSet& cards);
-
         void gameStarted(const decore::Suit &trumpSuit, const decore::CardSet &cardSet, const std::vector<const decore::PlayerId *>& players);
         void cardsGone(const decore::CardSet &cardSet);
         void cardsDropped(const decore::PlayerId *playerId, const decore::CardSet &cardSet);
@@ -104,12 +95,6 @@ private:
             const std::vector<decore::Card>& defendCards);
         void save(decore::DataWriter& writer);
         void init(decore::DataReader& reader);
-
-
-
-
-    private:
-        void removeCard(const decore::Card* card);
     };
 };
 

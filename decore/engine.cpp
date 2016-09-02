@@ -311,7 +311,7 @@ void Engine::init(DataReader& reader, const std::vector<Player*> players, const 
 
         std::vector<Card> defendCards;
         reader.read(defendCards, defaultCard);
-        for (std::vector<Card>::iterator it = attackCards.begin(); it != attackCards.end(); ++it) {
+        for (std::vector<Card>::iterator it = defendCards.begin(); it != defendCards.end(); ++it) {
             mTableCards.addDefendCard(*it);
         }
         reader.read(mMaxAttackCards);
@@ -433,8 +433,10 @@ if (mQuit.get()) { \
 
     std::for_each(mGameObservers.begin(), mGameObservers.end(), RoundStartNotification(mAttackers, mDefender, mRoundIndex));
 
-    // deal cards
-    dealCards();
+    if (mTableCards.empty()) {
+        // deal cards
+        dealCards();
+    }
 
     lock();
 

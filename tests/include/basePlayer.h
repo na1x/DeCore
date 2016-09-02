@@ -7,6 +7,12 @@ using namespace decore;
 
 class BasePlayer : public Player
 {
+    const decore::PlayerId* mId;
+    /**
+     * Each change in the player's cards adds new item into the vector
+     */
+    std::vector<CardSet> mPlayerCards;
+
 public:
     void idCreated(const PlayerId* id);
     const Card& attack(const PlayerId* playerId, const CardSet& cardSet);
@@ -31,6 +37,12 @@ public:
     void save(DataWriter& writer);
     void init(DataReader& reader);
 
+    const PlayerId* id() const;
+    const CardSet& cards(unsigned int index) const;
+    unsigned int cardSets() const;
+
+private:
+    void removeCard(const decore::Card* card);
 
 };
 

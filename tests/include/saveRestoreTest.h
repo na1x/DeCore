@@ -10,6 +10,7 @@
 #include "basePlayer.h"
 #include "dataWriter.h"
 #include "dataReader.h"
+#include "gameCardsTracker.h"
 
 using namespace decore;
 
@@ -17,10 +18,14 @@ class SaveRestoreTest : public CppUnit::TestFixture
 {
     CPPUNIT_TEST_SUITE(SaveRestoreTest);
     CPPUNIT_TEST(test00);
+    CPPUNIT_TEST(test01);
+    CPPUNIT_TEST(test02);
     CPPUNIT_TEST_SUITE_END();
 
 public:
     void test00();
+    void test01();
+    void test02();
 
 private:
 
@@ -98,8 +103,10 @@ private:
         void read(void* data, unsigned int dataSizeBytes);
         unsigned int position() const;
     };
-    static void* attackWaitTestThread(void* data);
+    static void* testThread(void* data);
     static void generate(Deck& deck);
+    static void test(Player& player0, Player& player1, Player& restoredPlayer0, Player& restoredPlayer1, PlayerSyncData& syncData, GameCardsTracker& restoredTracker, Engine& restored);
+    static void checkNoDeal(std::vector<BasePlayer*> players);
 };
 
 #endif /* SAVERESTORETEST_H */

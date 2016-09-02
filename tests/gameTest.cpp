@@ -9,52 +9,6 @@ using namespace decore;
 
 #define MAX_CARDS (6)
 
-GameTest::TestPlayer0::TestPlayer0()
-{
-
-}
-
-void GameTest::TestPlayer0::idCreated(const PlayerId*id)
-{
-    mId = id;
-}
-
-const Card &GameTest::TestPlayer0::attack(const PlayerId*, const CardSet &cardSet)
-{
-    const Card& res = *cardSet.begin();
-    removeCard(&res);
-    return res;
-}
-
-const Card *GameTest::TestPlayer0::pitch(const PlayerId*, const CardSet &cardSet)
-{
-    if (cardSet.empty()) {
-        return NULL;
-    }
-
-    const Card* res = &*cardSet.begin();
-    removeCard(res);
-    return res;
-}
-
-const Card *GameTest::TestPlayer0::defend(const PlayerId*, const Card &card, const CardSet &cardSet)
-{
-    (void)card;
-
-    if (cardSet.empty()) {
-        return NULL;
-    }
-
-    const Card* res = &*cardSet.begin();
-    removeCard(res);
-    return res;
-}
-
-void GameTest::TestPlayer0::cardsUpdated(const CardSet &cardSet)
-{
-    mPlayerCards.push_back(cardSet);
-}
-
 void GameTest::testInitialization()
 {
     Engine engine;
@@ -123,12 +77,12 @@ void GameTest::testOneRound00()
 
     CPPUNIT_ASSERT(!engine.playRound()); // cards for one round only
 
-    CPPUNIT_ASSERT(player0Id == player0.mId);
-    CPPUNIT_ASSERT(player1Id == player1.mId);
+    CPPUNIT_ASSERT(player0Id == player0.id());
+    CPPUNIT_ASSERT(player1Id == player1.id());
 
     CPPUNIT_ASSERT(!tracker.deckCards());
-    CPPUNIT_ASSERT(tracker.playerCards(player0.mId).empty());
-    CPPUNIT_ASSERT(tracker.playerCards(player1.mId).empty());
+    CPPUNIT_ASSERT(tracker.playerCards(player0.id()).empty());
+    CPPUNIT_ASSERT(tracker.playerCards(player1.id()).empty());
 }
 
 void GameTest::testOneRound01()
@@ -214,19 +168,19 @@ void GameTest::testOneRound01()
 
     for(std::vector<TestPlayer0*>::iterator it = players.begin(); it != players.end(); ++ it) {
         TestPlayer0& player = **it;
-        CPPUNIT_ASSERT(!player.mPlayerCards.empty());
+        CPPUNIT_ASSERT(player.cardSets() != 0);
         // check deal
-        CPPUNIT_ASSERT(player.mPlayerCards[0].size() == MAX_CARDS);
+        CPPUNIT_ASSERT(player.cards(0).size() == MAX_CARDS);
         // compare last player's update in the round with observer
-        CPPUNIT_ASSERT(observer.mPlayersCards[player.mId] == player.mPlayerCards[player.mPlayerCards.size() - 1].size());
+        CPPUNIT_ASSERT(observer.mPlayersCards[player.id()] == player.cards(player.cardSets() - 1).size());
     }
 
     // deck has cards for player0 and player1 to play the round without pitch from player2
-    CPPUNIT_ASSERT(1 == player2.mPlayerCards.size());
+    CPPUNIT_ASSERT(1 == player2.cardSets());
 
-    CPPUNIT_ASSERT(tracker.playerCards(player0.mId).empty());
-    CPPUNIT_ASSERT(tracker.playerCards(player1.mId).empty());
-    CPPUNIT_ASSERT(MAX_CARDS == tracker.playerCards(player2.mId).size());
+    CPPUNIT_ASSERT(tracker.playerCards(player0.id()).empty());
+    CPPUNIT_ASSERT(tracker.playerCards(player1.id()).empty());
+    CPPUNIT_ASSERT(MAX_CARDS == tracker.playerCards(player2.id()).size());
 
     CPPUNIT_ASSERT(tracker.deckCards() == 1);
 }
@@ -264,12 +218,12 @@ void GameTest::testOneRound02()
     CPPUNIT_ASSERT(engine.playRound());
     CPPUNIT_ASSERT(!engine.playRound());
     CPPUNIT_ASSERT(1 == tracker.lastRoundIndex());
-    CPPUNIT_ASSERT(engine.getLoser() == player1.mId);
-    CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->empty());
-    CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->size() == 1);
+    CPPUNIT_ASSERT(engine.getLoser() == player1.id());
+    CPPUNIT_ASSERT(player0.cards(player0.cardSets() - 1).empty());
+    CPPUNIT_ASSERT(player1.cards(player1.cardSets() - 1).size() == 1);
     CPPUNIT_ASSERT(tracker.deckCards() == 0);
-    CPPUNIT_ASSERT(tracker.playerCards(player0.mId).empty());
-    CPPUNIT_ASSERT(1 == tracker.playerCards(player1.mId).size());
+    CPPUNIT_ASSERT(tracker.playerCards(player0.id()).empty());
+    CPPUNIT_ASSERT(1 == tracker.playerCards(player1.id()).size());
 }
 
 void GameTest::testOneRound03()
@@ -302,12 +256,12 @@ void GameTest::testOneRound03()
     CPPUNIT_ASSERT(engine.setDeck(deck));
 
     CPPUNIT_ASSERT(!engine.playRound());
-    CPPUNIT_ASSERT(engine.getLoser() == player0.mId);
-    CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->size() == 1);
-    CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->empty());
+    CPPUNIT_ASSERT(engine.getLoser() == player0.id());
+    CPPUNIT_ASSERT(player0.cards(player0.cardSets() - 1).size() == 1);
+    CPPUNIT_ASSERT(player1.cards(player1.cardSets() - 1).empty());
 
-    CPPUNIT_ASSERT(tracker.playerCards(player0.mId).size() == 1);
-    CPPUNIT_ASSERT(tracker.playerCards(player1.mId).empty());
+    CPPUNIT_ASSERT(tracker.playerCards(player0.id()).size() == 1);
+    CPPUNIT_ASSERT(tracker.playerCards(player1.id()).empty());
     CPPUNIT_ASSERT(!tracker.deckCards());
 }
 
@@ -338,11 +292,11 @@ void GameTest::testDraw00()
 
     CPPUNIT_ASSERT(!engine.playRound());
     CPPUNIT_ASSERT(!engine.getLoser());
-    CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->empty());
-    CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->empty());
+    CPPUNIT_ASSERT(player0.cards(player0.cardSets() - 1).empty());
+    CPPUNIT_ASSERT(player1.cards(player1.cardSets() - 1).empty());
 
-    CPPUNIT_ASSERT(cardTracker.playerCards(player0.mId).empty());
-    CPPUNIT_ASSERT(cardTracker.playerCards(player1.mId).empty());
+    CPPUNIT_ASSERT(cardTracker.playerCards(player0.id()).empty());
+    CPPUNIT_ASSERT(cardTracker.playerCards(player1.id()).empty());
     CPPUNIT_ASSERT(!cardTracker.deckCards());
 }
 
@@ -403,15 +357,15 @@ void GameTest::testThreePlayers00()
     CPPUNIT_ASSERT(engine.playRound());
 
     // one deal + three attacks
-    CPPUNIT_ASSERT(player0.mPlayerCards.size() == 4);
+    CPPUNIT_ASSERT(player0.cardSets() == 4);
     // one deal + six defends
-    CPPUNIT_ASSERT(player1.mPlayerCards.size() == 7);
+    CPPUNIT_ASSERT(player1.cardSets() == 7);
     // one deal + three attacks
-    CPPUNIT_ASSERT(player2.mPlayerCards.size() == 4);
+    CPPUNIT_ASSERT(player2.cardSets() == 4);
 
-    CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->size() == 3);
-    CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->empty());
-    CPPUNIT_ASSERT((player2.mPlayerCards.end() - 1)->size() == 3);
+    CPPUNIT_ASSERT(player0.cards(player0.cardSets() - 1).size() == 3);
+    CPPUNIT_ASSERT(player1.cards(player1.cardSets() - 1).empty());
+    CPPUNIT_ASSERT(player2.cards(player2.cardSets() - 1).size() == 3);
 
     CPPUNIT_ASSERT(1 == gameCardsTracker.deckCards());
 }
@@ -457,15 +411,15 @@ void GameTest::testPitch00()
     CPPUNIT_ASSERT(engine.playRound());
 
     // deal and three attacks
-    CPPUNIT_ASSERT(player0.mPlayerCards.size() == 4);
+    CPPUNIT_ASSERT(player0.cardSets() == 4);
     // deal and one pick up
-    CPPUNIT_ASSERT(player1.mPlayerCards.size() == 2);
+    CPPUNIT_ASSERT(player1.cardSets() == 2);
 
-    CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->size() == 1);
-    CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->size() == 6);
+    CPPUNIT_ASSERT(player0.cards(player0.cardSets() - 1).size() == 1);
+    CPPUNIT_ASSERT(player1.cards(player1.cardSets() - 1).size() == 6);
 
-    CPPUNIT_ASSERT(gameCardsTracker.playerCards(player0.mId).size() == 1);
-    CPPUNIT_ASSERT(gameCardsTracker.playerCards(player1.mId).size() == 6);
+    CPPUNIT_ASSERT(gameCardsTracker.playerCards(player0.id()).size() == 1);
+    CPPUNIT_ASSERT(gameCardsTracker.playerCards(player1.id()).size() == 6);
 }
 
 void GameTest::testPitch01()
@@ -509,19 +463,19 @@ void GameTest::testPitch01()
     CPPUNIT_ASSERT(engine.playRound());
 
     // deal and two attacks
-    CPPUNIT_ASSERT(player0.mPlayerCards.size() == 3);
+    CPPUNIT_ASSERT(player0.cardSets() == 3);
     // deal + defend + one pick up
-    CPPUNIT_ASSERT(player1.mPlayerCards.size() == 3);
+    CPPUNIT_ASSERT(player1.cardSets() == 3);
     // deal and one pitch
-    CPPUNIT_ASSERT(player2.mPlayerCards.size() == 2);
+    CPPUNIT_ASSERT(player2.cardSets() == 2);
 
-    CPPUNIT_ASSERT((player0.mPlayerCards.end() - 1)->size() == 2);
-    CPPUNIT_ASSERT((player1.mPlayerCards.end() - 1)->size() == MAX_CARDS);
-    CPPUNIT_ASSERT((player2.mPlayerCards.end() - 1)->size() == 2);
+    CPPUNIT_ASSERT(player0.cards(player0.cardSets() - 1).size() == 2);
+    CPPUNIT_ASSERT(player1.cards(player1.cardSets() - 1).size() == MAX_CARDS);
+    CPPUNIT_ASSERT(player2.cards(player2.cardSets() - 1).size() == 2);
 
-    CPPUNIT_ASSERT(tracker.playerCards(player0.mId).size() == 2);
-    CPPUNIT_ASSERT(tracker.playerCards(player1.mId).size() == MAX_CARDS);
-    CPPUNIT_ASSERT(tracker.playerCards(player2.mId).size() == 2);
+    CPPUNIT_ASSERT(tracker.playerCards(player0.id()).size() == 2);
+    CPPUNIT_ASSERT(tracker.playerCards(player1.id()).size() == MAX_CARDS);
+    CPPUNIT_ASSERT(tracker.playerCards(player2.id()).size() == 2);
 }
 
 static bool checkCard(const CardSet& set, const Card& card)
@@ -571,7 +525,7 @@ void GameTest::testMoveTransfer00()
 
     CPPUNIT_ASSERT(!engine.playRound());
 
-    CPPUNIT_ASSERT(engine.getLoser() == player1.mId);
+    CPPUNIT_ASSERT(engine.getLoser() == player1.id());
 
     CPPUNIT_ASSERT(2 == player0.mRoundsData.size());
 
@@ -688,26 +642,31 @@ void GameTest::Observer::init(DataReader& reader)
 void GameTest::TestPlayer0::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> &players)
 {
     Observer::gameStarted(trumpSuit, cardSet, players);
+    BasePlayer::gameStarted(trumpSuit, cardSet, players);
 }
 
 void GameTest::TestPlayer0::cardsGone(const CardSet &cardSet)
 {
     Observer::cardsGone(cardSet);
+    BasePlayer::cardsGone(cardSet);
 }
 
 void GameTest::TestPlayer0::cardsDropped(const PlayerId *playerId, const CardSet &cardSet)
 {
     Observer::cardsDropped(playerId, cardSet);
+    BasePlayer::cardsDropped(playerId, cardSet);
 }
 
 void GameTest::TestPlayer0::cardsPickedUp(const PlayerId *playerId, const CardSet &cardSet)
 {
     Observer::cardsPickedUp(playerId, cardSet);
+    BasePlayer::cardsPickedUp(playerId, cardSet);
 }
 
 void GameTest::TestPlayer0::cardsDealed(const PlayerId *playerId, unsigned int cardsAmount)
 {
     Observer::cardsDealed(playerId, cardsAmount);
+    BasePlayer::cardsDealed(playerId, cardsAmount);
 }
 
 void GameTest::TestPlayer0::gameRestored(const std::vector<const PlayerId*>& playerIds,
@@ -718,36 +677,29 @@ void GameTest::TestPlayer0::gameRestored(const std::vector<const PlayerId*>& pla
         const std::vector<Card>& defendCards)
 {
     Observer::gameRestored(playerIds, playersCards, deckCards, trumpSuit, attackCards, defendCards);
+    BasePlayer::gameRestored(playerIds, playersCards, deckCards, trumpSuit, attackCards, defendCards);
 }
 
 void GameTest::TestPlayer0::save(decore::DataWriter& writer)
 {
     Observer::save(writer);
+    BasePlayer::save(writer);
 }
 
 void GameTest::TestPlayer0::init(decore::DataReader& reader)
 {
     Observer::init(reader);
-}
-
-void GameTest::TestPlayer0::removeCard(const Card *card)
-{
-    CardSet currentCards = *(mPlayerCards.end() - 1);
-    CPPUNIT_ASSERT(currentCards.erase(*card));
-    mPlayerCards.push_back(currentCards);
+    BasePlayer::init(reader);
 }
 
 void GameTest::TestPlayer0::roundStarted(unsigned int roundIndex, const std::vector<const PlayerId *> attackers, const PlayerId *defender)
 {
     Observer::roundStarted(roundIndex, attackers, defender);
+    BasePlayer::roundStarted(roundIndex, attackers, defender);
 }
 
 void GameTest::TestPlayer0::roundEnded(unsigned int roundIndex)
 {
     Observer::roundEnded(roundIndex);
-}
-
-void GameTest::TestPlayer0::cardsRestored(const decore::CardSet& cards)
-{
-    mPlayerCards.push_back(cards);
+    BasePlayer::roundEnded(roundIndex);
 }
