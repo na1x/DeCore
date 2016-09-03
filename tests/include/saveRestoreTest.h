@@ -20,12 +20,14 @@ class SaveRestoreTest : public CppUnit::TestFixture
     CPPUNIT_TEST(test00);
     CPPUNIT_TEST(test01);
     CPPUNIT_TEST(test02);
+    CPPUNIT_TEST(test03);
     CPPUNIT_TEST_SUITE_END();
 
 public:
     void test00();
     void test01();
     void test02();
+    void test03();
 
 private:
 
@@ -63,23 +65,28 @@ private:
         ThreadData(Player& player0, Player& player1, PlayerSyncData& syncData);
     };
 
-    class AttackWaitPlayer : public BasePlayer
+    class WaitPlayer : public BasePlayer
     {
         PlayerSyncData& mSyncData;
         unsigned int mMoveCount;
+
+    protected:
+        WaitPlayer(PlayerSyncData& syncData, unsigned int moveCount);
+        void processMove();
+    };
+
+    class AttackWaitPlayer : public WaitPlayer
+    {
     public:
         AttackWaitPlayer(PlayerSyncData& syncData, unsigned int moveCount);
         const Card& attack(const PlayerId* playerId, const CardSet& cardSet);
         const Card* pitch(const PlayerId* playerId, const CardSet& cardSet);
-    private:
-        void processMove();
     };
 
-    class DefendWaitPlayer : public BasePlayer
+    class DefendWaitPlayer : public WaitPlayer
     {
-        PlayerSyncData& mSyncData;
     public:
-        DefendWaitPlayer(PlayerSyncData& syncData);
+        DefendWaitPlayer(PlayerSyncData& syncData, unsigned int moveCount);
         const Card* defend(const PlayerId* playerId, const Card& attackCard, const CardSet& cardSet);
     };
 

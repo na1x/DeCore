@@ -188,7 +188,7 @@ void GameTest::testOneRound01()
 void GameTest::testOneRound02()
 {
     // attacker has 2 cards, and goes with trump (due to CardSet sort order)
-    // player two picks card
+    // player two picks the card
     // game ended on second round - player one goes with SUIT_CLUBS, RANK_6
     // player two beats and loses with one card remained
     Engine engine;

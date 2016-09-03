@@ -21,6 +21,8 @@ Engine::Engine()
     , mCurrentRoundAttackerId(NULL)
     , mPassedCounter(0)
     , mMaxAttackCards(0)
+    , mDefendFailed(false)
+    , mPickAttackCardFromTable(false)
 {
     pthread_mutex_init(&mLock, NULL);
 }
@@ -136,6 +138,7 @@ bool Engine::playRound()
     bool defended = playCurrentRound();
 
     lock();
+    mDefendFailed = false;
     mRoundIndex++;
 
     // if attack failed "next move" goes to defender
@@ -229,6 +232,7 @@ void Engine::save(DataWriter& writer) const
         writer.write(mTableCards.attackCards().begin(), mTableCards.attackCards().end());
         writer.write(mTableCards.defendCards().begin(), mTableCards.defendCards().end());
         writer.write(mMaxAttackCards);
+        writer.write(mDefendFailed);
     }
 
     // save observers data
@@ -315,6 +319,8 @@ void Engine::init(DataReader& reader, const std::vector<Player*> players, const 
             mTableCards.addDefendCard(*it);
         }
         reader.read(mMaxAttackCards);
+        reader.read(mDefendFailed);
+        mPickAttackCardFromTable = !mDefendFailed && attackCards.size() == defendCards.size() + 1;
     }
 
     // append observers
@@ -338,7 +344,6 @@ void Engine::init(DataReader& reader, const std::vector<Player*> players, const 
         reader.read(expectedOberverDataSize);
         assert(actualObserverDataSize == expectedOberverDataSize);
     }
-
 }
 
 void Engine::quit()
@@ -448,8 +453,6 @@ if (mQuit.get()) { \
     CardSet& defenderCards = mPlayersCards[mDefender];
     Player& defender = *mPlayers[mDefender];
 
-    bool defendFailed = false;
-
     if (!mMaxAttackCards) {
         mMaxAttackCards = Rules::maxAttackCards(defenderCards.size());
     }
@@ -463,59 +466,67 @@ if (mQuit.get()) { \
             break;
         }
 
-        CardSet attackCards = Rules::getAttackCards(mTableCards.all(), mPlayersCards[mCurrentRoundAttackerId]);
-
-        Player& currentAttacker = *mPlayers[mCurrentRoundAttackerId];
         const Card* attackCardPtr;
 
-        if (mTableCards.empty()) {
-            attackCardPtr = attackCards.empty() ? NULL : &currentAttacker.attack(mDefender, attackCards);
+        if (mPickAttackCardFromTable) {
+            assert(!mTableCards.attackCards().empty());
+            attackCardPtr = &*(mTableCards.attackCards().end() - 1);
         } else {
-            // ask for pitch even with empty attackCards - expected NULL attack card pointer
-            attackCardPtr = currentAttacker.pitch(mDefender, attackCards);
-        }
+            CardSet attackCards = Rules::getAttackCards(mTableCards.all(), mPlayersCards[mCurrentRoundAttackerId]);
 
-        // check if quit requested and only after that transfer move to defender
-        CHECK_QUIT;
+            Player& currentAttacker = *mPlayers[mCurrentRoundAttackerId];
 
-        if (attackCards.empty() || !attackCardPtr) {
-            lock();
-            // player skipped the move - pick next attacker
-            mCurrentRoundAttackerId = Rules::pickNext(mAttackers, mCurrentRoundAttackerId);
-            // if more than one attacker and we have first attacker again - reset pass counter
-            if (mAttackers.size() > 1 && mCurrentRoundAttackerId == mAttackers[0]) {
-                mPassedCounter = 0;
+            if (mTableCards.empty()) {
+                attackCardPtr = attackCards.empty() ? NULL : &currentAttacker.attack(mDefender, attackCards);
+            } else {
+                // ask for pitch even with empty attackCards - expected NULL attack card pointer
+                attackCardPtr = currentAttacker.pitch(mDefender, attackCards);
             }
-            mPassedCounter++;
-            unlock();
 
-            if (mPassedCounter == mAttackers.size()) {
-                // all attackers "passed" - round ended
-                break;
+            // check if quit requested and only after that transfer move to defender
+            CHECK_QUIT;
+
+            if (attackCards.empty() || !attackCardPtr) {
+                lock();
+                // player skipped the move - pick next attacker
+                mCurrentRoundAttackerId = Rules::pickNext(mAttackers, mCurrentRoundAttackerId);
+                // if more than one attacker and we have first attacker again - reset pass counter
+                if (mAttackers.size() > 1 && mCurrentRoundAttackerId == mAttackers[0]) {
+                    mPassedCounter = 0;
+                }
+                mPassedCounter++;
+                unlock();
+
+                if (mPassedCounter == mAttackers.size()) {
+                    // all attackers "passed" - round ended
+                    break;
+                }
+                continue;
             }
-            continue;
+
+            assert(attackCardPtr);
+
+            if(!attackCards.erase(*attackCardPtr)) {
+                // invalid card returned - the card is not from attackCards
+                assert(!attackCards.empty());
+                // take any card
+                attackCardPtr = &*attackCards.begin();
+            }
         }
 
         assert(attackCardPtr);
-
         Card attackCard = *attackCardPtr;
 
-        if(!attackCards.erase(attackCard)) {
-            // invalid card returned - the card is not from attackCards
-            assert(!attackCards.empty());
-            // take any card
-            attackCard = *attackCards.begin();
+        if (!mPickAttackCardFromTable) {
+            lock();
+            mTableCards.addAttackCard(attackCard);
+            mPlayersCards[mCurrentRoundAttackerId].erase(attackCard);
+            unlock();
+            CHECK_QUIT;
+            std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsDroppedNotification(mCurrentRoundAttackerId, attackCard));
         }
 
-        std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsDroppedNotification(mCurrentRoundAttackerId, attackCard));
-
-        lock();
-        mTableCards.addAttackCard(attackCard);
-        mPlayersCards[mCurrentRoundAttackerId].erase(attackCard);
-        unlock();
-
-        CHECK_QUIT;
-
+        // TODO: probably no need to invoke this if mDefendFailed
         CardSet defendCards = Rules::getDefendCards(attackCard, defenderCards, mDeck->trumpSuit());
 
         const Card* defendCardPtr = defender.defend(mCurrentRoundAttackerId, attackCard, defendCards);
@@ -526,7 +537,7 @@ if (mQuit.get()) { \
 
         if(noCardsToDefend || userGrabbedCards || invalidDefendCard) {
             // defend failed
-            defendFailed = true;
+            mDefendFailed = true;
         } else {
             lock();
             mTableCards.addDefendCard(*defendCardPtr);
@@ -535,9 +546,10 @@ if (mQuit.get()) { \
             CHECK_QUIT;
             std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsDroppedNotification(mDefender, *defendCardPtr));
         }
+        mPickAttackCardFromTable = false;
     }
 
-    if (defendFailed) {
+    if (mDefendFailed) {
         lock();
         defenderCards.insert(mTableCards.all().begin(), mTableCards.all().end());
         defender.cardsUpdated(defenderCards);
@@ -557,7 +569,7 @@ if (mQuit.get()) { \
 
     std::for_each(mGameObservers.begin(), mGameObservers.end(), RoundEndNotification(mRoundIndex));
 
-    return !defendFailed;
+    return !mDefendFailed;
 }
 
 void Engine::dealCards()

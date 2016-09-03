@@ -20,10 +20,8 @@ SaveRestoreTest::ThreadData::ThreadData(Player& player0, Player& player1, Player
 
 }
 
-
 SaveRestoreTest::AttackWaitPlayer::AttackWaitPlayer(PlayerSyncData& syncData, unsigned int moveCount)
-    : mSyncData(syncData)
-    , mMoveCount(moveCount)
+    : WaitPlayer(syncData, moveCount)
 {
 
 }
@@ -31,16 +29,23 @@ SaveRestoreTest::AttackWaitPlayer::AttackWaitPlayer(PlayerSyncData& syncData, un
 const Card& SaveRestoreTest::AttackWaitPlayer::attack(const PlayerId* playerId, const CardSet& cardSet)
 {
     processMove();
-    return BasePlayer::attack(playerId, cardSet);
+    return WaitPlayer::attack(playerId, cardSet);
 }
 
 const Card* SaveRestoreTest::AttackWaitPlayer::pitch(const PlayerId* playerId, const CardSet& cardSet)
 {
     processMove();
-    return BasePlayer::pitch(playerId, cardSet);
+    return WaitPlayer::pitch(playerId, cardSet);
 }
 
-void SaveRestoreTest::AttackWaitPlayer::processMove()
+SaveRestoreTest::WaitPlayer::WaitPlayer(PlayerSyncData& syncData, unsigned int moveCount)
+    : mSyncData(syncData)
+    , mMoveCount(moveCount)
+{
+
+}
+
+void SaveRestoreTest::WaitPlayer::processMove()
 {
     assert(mMoveCount);
     mMoveCount--;
@@ -51,18 +56,15 @@ void SaveRestoreTest::AttackWaitPlayer::processMove()
     }
 }
 
-SaveRestoreTest::DefendWaitPlayer::DefendWaitPlayer(PlayerSyncData& syncData)
-    : mSyncData(syncData)
+SaveRestoreTest::DefendWaitPlayer::DefendWaitPlayer(PlayerSyncData& syncData, unsigned int moveCount)
+    : WaitPlayer(syncData, moveCount)
 {
 }
 
 const Card* SaveRestoreTest::DefendWaitPlayer::defend(const PlayerId* playerId, const Card& attackCard, const CardSet& cardSet)
 {
-    (void) playerId;
-    (void) attackCard;
-    (void) cardSet;
-    mSyncData.waitForMove();
-    return NULL;
+    processMove();
+    return WaitPlayer::defend(playerId, attackCard, cardSet);
 }
 
 SaveRestoreTest::PlayerSyncData::PlayerSyncData()
@@ -301,7 +303,7 @@ void SaveRestoreTest::test01()
 
 void SaveRestoreTest::test02()
 {
-    // attacker sleeps on second attack move
+    // attacker sleeps on third attack move
     // save game while attacker waits and save
     // restore the game and check
     PlayerSyncData syncData;
@@ -324,6 +326,44 @@ void SaveRestoreTest::test02()
 
     CPPUNIT_ASSERT(restoredPlayer0.cards(restoredPlayer0.cardSets() - 1).size() == MAX_CARDS - 2);
     CPPUNIT_ASSERT(restoredPlayer1.cards(restoredPlayer1.cardSets() - 1).size() == MAX_CARDS - 2);
+
+    CPPUNIT_ASSERT(36 == tracker.gameCards().size());
+
+    // continue game
+    CPPUNIT_ASSERT(restored.playRound());
+
+    std::vector<BasePlayer*> restoredPlayers;
+    restoredPlayers.push_back(&restoredPlayer0);
+    restoredPlayers.push_back(&restoredPlayer1);
+
+    checkNoDeal(restoredPlayers);
+
+    CPPUNIT_ASSERT(6 == tracker.goneCards().size());
+}
+
+void SaveRestoreTest::test03()
+{
+    // defender sleeps on first defend move
+    // save game while attacker waits and save
+    // restore the game and check
+    PlayerSyncData syncData;
+    BasePlayer player0;
+    DefendWaitPlayer player1(syncData, 1);
+
+    BasePlayer restoredPlayer0, restoredPlayer1;
+    Engine restored;
+    GameCardsTracker tracker;
+
+    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored);
+
+    CPPUNIT_ASSERT(MAX_CARDS - 1 == tracker.playerCards(restoredPlayer0.id()).unknownCards()); // attack done
+    CPPUNIT_ASSERT(MAX_CARDS == tracker.playerCards(restoredPlayer1.id()).unknownCards());
+
+    CPPUNIT_ASSERT(2 == restoredPlayer0.cardSets());
+    CPPUNIT_ASSERT(1 == restoredPlayer1.cardSets());
+
+    CPPUNIT_ASSERT(restoredPlayer0.cards(restoredPlayer0.cardSets() - 1).size() == MAX_CARDS - 1);
+    CPPUNIT_ASSERT(restoredPlayer1.cards(restoredPlayer1.cardSets() - 1).size() == MAX_CARDS);
 
     CPPUNIT_ASSERT(36 == tracker.gameCards().size());
 

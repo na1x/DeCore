@@ -175,6 +175,16 @@ class Engine
      * @brief Current round state: max cards for attack (can't be bigger then defender's cards amount)
      */
     unsigned int mMaxAttackCards;
+    /**
+     * @brief Current round state: true if defend is failed
+     */
+    bool mDefendFailed;
+    /**
+     * @brief "Restored game" flag
+     *
+     * Actual for restored game when attacker dropped card and defender should beat it
+     */
+    bool mPickAttackCardFromTable;
 public:
     /**
      * @brief Ctor
