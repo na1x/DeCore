@@ -17,17 +17,21 @@ using namespace decore;
 class SaveRestoreTest : public CppUnit::TestFixture
 {
     CPPUNIT_TEST_SUITE(SaveRestoreTest);
+    CPPUNIT_TEST(testDataReader);
     CPPUNIT_TEST(test00);
     CPPUNIT_TEST(test01);
     CPPUNIT_TEST(test02);
     CPPUNIT_TEST(test03);
+    CPPUNIT_TEST(test04);
     CPPUNIT_TEST_SUITE_END();
 
 public:
+    void testDataReader();
     void test00();
     void test01();
     void test02();
     void test03();
+    void test04();
 
 private:
 
@@ -93,6 +97,7 @@ private:
     class TestWriter : public DataWriter
     {
     public:
+        using DataWriter::write;
         std::vector<unsigned char> mBytes;
     protected:
         void write(const void* data, unsigned int dataSizeBytes);
@@ -101,8 +106,9 @@ private:
 
     class TestReader : public DataReader
     {
-        unsigned int mByteIndex;
     public:
+        unsigned int mByteIndex;
+        using DataReader::read;
         const std::vector<unsigned char>& mBytes;
         TestReader(const std::vector<unsigned char>& bytes);
 

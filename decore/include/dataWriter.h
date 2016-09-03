@@ -31,8 +31,8 @@ public:
     template<typename T>
     void write(T begin, T end)
     {
-        typename T::difference_type elementsCount = std::distance(begin, end);
-        write(&elementsCount, sizeof(elementsCount));
+        unsigned int elementsCount = std::distance(begin, end);
+        write(elementsCount);
         for (T it = begin; it != end; ++it) {
             write(&*it, sizeof(*it));
         }

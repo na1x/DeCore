@@ -159,6 +159,8 @@ void GameCardsTracker::save(DataWriter& writer)
 
     writer.write(mGoneCards.begin(), mGoneCards.end());
     writer.write(mLastRoundIndex);
+    writer.write(mAttackCards.begin(), mAttackCards.end());
+    writer.write(mDefendCards.begin(), mDefendCards.end());
 }
 
 void GameCardsTracker::init(DataReader& reader)
@@ -180,11 +182,29 @@ void GameCardsTracker::init(DataReader& reader)
         PlayerCards cards;
         cards.addCards(knownCards);
         cards.addUnknownCards(unknownCards);
+        assert(mPlayerIds.size() > playerIndex);
         mPlayersCards[mPlayerIds[playerIndex]] = cards;
     }
 
     reader.read(mGoneCards, defaultCard);
     reader.read(mLastRoundIndex);
+    reader.read(mAttackCards, defaultCard);
+    reader.read(mDefendCards, defaultCard);
+
+    // check data consistency
+#ifndef NDEBUG
+    for (std::map<const PlayerId*, unsigned int>::const_iterator it = mRestoredPlayerCards.begin(); it != mRestoredPlayerCards.end(); ++it) {
+        assert(mPlayersCards.at((*it).first).size() == (*it).second);
+    }
+    assert(mRestoredAttackCards.size() == mAttackCards.size());
+    assert(mRestoredDefendCards.size() == mDefendCards.size());
+    for (unsigned int i = 0; i < mRestoredAttackCards.size(); i++) {
+        mAttackCards.at(i) == mRestoredAttackCards.at(i);
+    }
+    for (unsigned int i = 0; i < mRestoredDefendCards.size(); i++) {
+        mDefendCards.at(i) == mRestoredDefendCards.at(i);
+    }
+#endif // NDEBUG
 }
 
 void GameCardsTracker::gameRestored(const std::vector<const PlayerId*>& playerIds,
@@ -195,11 +215,13 @@ void GameCardsTracker::gameRestored(const std::vector<const PlayerId*>& playerId
         const std::vector<Card>& defendCards)
 {
     mPlayerIds.insert(mPlayerIds.begin(), playerIds.begin(), playerIds.end());
-    (void)playersCards; // TODO: use for internal checks
+#ifndef NDEBUG
+    mRestoredPlayerCards = playersCards;
+    mRestoredAttackCards = attackCards;
+    mRestoredDefendCards = defendCards;
+#endif
     mDeckCardsNumber = deckCards;
     mTrumpSuit = trumpSuit;
-    mAttackCards = attackCards;
-    mDefendCards = defendCards;
 }
 
 const CardSet &GameCardsTracker::gameCards() const
@@ -236,6 +258,16 @@ const CardSet& GameCardsTracker::goneCards() const
 unsigned int GameCardsTracker::lastRoundIndex() const
 {
     return mLastRoundIndex;
+}
+
+const std::vector<Card>& GameCardsTracker::attackCards() const
+{
+    return mAttackCards;
+}
+
+const std::vector<Card>& GameCardsTracker::defendCards() const
+{
+    return mDefendCards;
 }
 
 GameCardsTracker::CardRemover::CardRemover(CardSet &cards)

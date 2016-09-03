@@ -195,6 +195,8 @@ void SaveRestoreTest::test(Player& player0, Player& player1, Player& restoredPla
     TestReader reader(savedData.mBytes);
     restored.init(reader, restoredPlayers, observers);
 
+    CPPUNIT_ASSERT(reader.mByteIndex == savedData.mBytes.size());
+
     CPPUNIT_ASSERT(0 == restoredTracker.lastRoundIndex());
     // check deck size
     CPPUNIT_ASSERT(24 == restoredTracker.deckCards());
@@ -219,6 +221,28 @@ void SaveRestoreTest::checkNoDeal(std::vector<BasePlayer*> players)
             maxCards = player.cards(i).size();
         }
     }
+}
+
+void SaveRestoreTest::testDataReader()
+{
+    TestWriter writer;
+    TestReader reader(writer.mBytes);
+    const unsigned int a = 10;
+    const unsigned char b = 'b';
+    Deck deck;
+    generate(deck);
+    writer.write(a);
+    writer.write(b);
+    writer.write(deck.begin(), deck.end());
+    unsigned int readA;
+    unsigned char readB;
+    Deck readDeck;
+    reader.read(readA);
+    reader.read(readB);
+    reader.read(readDeck, Card(SUIT_LAST, RANK_LAST));
+    CPPUNIT_ASSERT(a == readA);
+    CPPUNIT_ASSERT(b == readB);
+    CPPUNIT_ASSERT(deck == readDeck);
 }
 
 void SaveRestoreTest::test00()
@@ -379,6 +403,47 @@ void SaveRestoreTest::test03()
     CPPUNIT_ASSERT(6 == tracker.goneCards().size());
 }
 
+void SaveRestoreTest::test04()
+{
+    // defender sleeps on first defend move
+    // save game while attacker waits and save
+    // restore the game and check
+    PlayerSyncData syncData;
+    BasePlayer player0;
+    DefendWaitPlayer player1(syncData, 2);
+
+    BasePlayer restoredPlayer0, restoredPlayer1;
+    Engine restored;
+    GameCardsTracker tracker;
+
+    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored);
+
+    CPPUNIT_ASSERT(MAX_CARDS - 2 == tracker.playerCards(restoredPlayer0.id()).unknownCards()); // attack done
+    CPPUNIT_ASSERT(MAX_CARDS - 1 == tracker.playerCards(restoredPlayer1.id()).unknownCards());
+
+    CPPUNIT_ASSERT(3 == restoredPlayer0.cardSets());
+    CPPUNIT_ASSERT(2 == restoredPlayer1.cardSets());
+
+    CPPUNIT_ASSERT(restoredPlayer0.cards(restoredPlayer0.cardSets() - 1).size() == MAX_CARDS - 2);
+    CPPUNIT_ASSERT(restoredPlayer1.cards(restoredPlayer1.cardSets() - 1).size() == MAX_CARDS - 1);
+
+    CPPUNIT_ASSERT(tracker.attackCards().size() == 2);
+    CPPUNIT_ASSERT(tracker.defendCards().size() == 1);
+
+    CPPUNIT_ASSERT(36 == tracker.gameCards().size());
+
+    // continue game
+    CPPUNIT_ASSERT(restored.playRound());
+
+    std::vector<BasePlayer*> restoredPlayers;
+    restoredPlayers.push_back(&restoredPlayer0);
+    restoredPlayers.push_back(&restoredPlayer1);
+
+    checkNoDeal(restoredPlayers);
+
+    CPPUNIT_ASSERT(6 == tracker.goneCards().size());
+}
+
 void SaveRestoreTest::TestWriter::write(const void* data, unsigned int dataSizeBytes)
 {
     const unsigned char* dataPtr = static_cast<const unsigned char*>(data);
@@ -410,6 +475,7 @@ void SaveRestoreTest::TestReader::read(void* data, unsigned int dataSizeBytes)
 {
     unsigned char* dataPtr = static_cast<unsigned char*>(data);
     assert(dataSizeBytes);
+    CPPUNIT_ASSERT(mByteIndex < mBytes.size());
     unsigned char recordedDataSize = mBytes[mByteIndex++];
     CPPUNIT_ASSERT(dataSizeBytes == recordedDataSize);
     while (dataSizeBytes--) {

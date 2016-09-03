@@ -239,16 +239,24 @@ public:
     /**
      * @brief Saves current state of the game into the `write`
      *
-     * Saved data could be used later to construct the engine from the data so allowing to resume the game.
+     * The feature could be used to save game state when application is being closed and to restore it's state on next start.
+     * Note: make ensure that the data is used to restore the same version of the library, because next version of the library could add more data in the 'state'
+     *
+     * The library provides same save/init flow for game observers (via GameObserver::save()) for the convenience
      * @param writer writer to save state
+     * @see init()
      */
     void save(DataWriter& writer) const;
 
     /**
      * @brief Initializes the instance from the 'reader'
+     *
+     * Note: DataReader does not denote reading errors, for example the library could read more or less data amount than available, implementation
+     * of the interfaces should detect such errors and do not use invalid constructed engine.
      * @param reader contains data saved
      * @param players players
      * @param observers game observers
+     * @see save()
      */
     void init(DataReader& reader, const std::vector<Player*> players, const std::vector<GameObserver*>& observers);
     /**
@@ -375,11 +383,11 @@ private:
     /**
      * @brief std::for_each function
      */
-    class CardsLeftNotification
+    class CardsGoneNotification
     {
         const CardSet& mCards;
     public:
-        CardsLeftNotification(const CardSet& tableCards);
+        CardsGoneNotification(const CardSet& tableCards);
         void operator()(GameObserver* observer);
     };
 

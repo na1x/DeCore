@@ -557,7 +557,7 @@ if (mQuit.get()) { \
         CHECK_QUIT;
         std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsReceivedNotification(mDefender, mTableCards.all()));
     } else {
-        std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsLeftNotification(mTableCards.all()));
+        std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsGoneNotification(mTableCards.all()));
     }
 
     // cleanup
@@ -660,13 +660,13 @@ void Engine::GameRestoredNotification::operator ()(GameObserver* observer)
     observer->gameRestored(mPlayerIds, mPlayersCards, mDeckCards, mTrumpSuit, mTableCards.attackCards(), mTableCards.defendCards());
 }
 
-Engine::CardsLeftNotification::CardsLeftNotification(const CardSet& tableCards)
+Engine::CardsGoneNotification::CardsGoneNotification(const CardSet& tableCards)
     : mCards(tableCards)
 {
 
 }
 
-void Engine::CardsLeftNotification::operator ()(GameObserver* observer)
+void Engine::CardsGoneNotification::operator ()(GameObserver* observer)
 {
     observer->cardsGone(mCards);
 }

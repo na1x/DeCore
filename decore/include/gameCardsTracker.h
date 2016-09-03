@@ -127,7 +127,20 @@ class GameCardsTracker : public GameObserver
      * @brief Last round index
      */
     unsigned int mLastRoundIndex;
-
+#ifndef NDEBUG
+    /**
+     * @brief For internal validation
+     */
+    std::map<const PlayerId*, unsigned int> mRestoredPlayerCards;
+    /**
+     * @brief For internal validation
+     */
+    std::vector<Card> mRestoredAttackCards;
+    /**
+     * @brief For internal validation
+     */
+    std::vector<Card> mRestoredDefendCards;
+#endif // NDEBUG
 public:
     GameCardsTracker();
 
@@ -186,6 +199,18 @@ public:
      * @return last round index
      */
     unsigned int lastRoundIndex() const;
+
+    /**
+     * @brief Returns mAttackCards
+     * @return cards
+     */
+    const std::vector<Card>& attackCards() const;
+
+    /**
+     * @brief Returns mDefendCards
+     * @return cards
+     */
+    const std::vector<Card>& defendCards() const;
 private:
     /**
      * @brief Function for std::for_each

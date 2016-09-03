@@ -46,12 +46,12 @@ public:
     template <typename T, typename V>
     void read(T& container, const V& defaultValue)
     {
-        typename T::size_type amount;
+        unsigned int amount;
         read(amount);
         while (amount--) {
             V value(defaultValue);
             read(value);
-            container.insert(container.begin(), value);
+            container.insert(container.end(), value);
         }
     }
 
