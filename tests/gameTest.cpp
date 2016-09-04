@@ -537,6 +537,63 @@ void GameTest::testMoveTransfer00()
     CPPUNIT_ASSERT(round1.mPickedUpCards.empty());
 }
 
+void GameTest::testInvalidCards00()
+{
+    // player attacks with card which is not from suggested set
+    AttackWithInvalidCardPlayer player0(SUIT_CLUBS, RANK_ACE);
+
+    BasePlayer player1;
+
+    GameCardsTracker tracker;
+
+    playRound(player0, player1, tracker);
+
+    const CardSet& goneCards = tracker.goneCards();
+    CPPUNIT_ASSERT(goneCards.find(player0.invalidCard()) == goneCards.end());
+}
+
+void GameTest::testInvalidCards01()
+{
+    // player attacks with card which value is from suggested set but it is not located in the set
+    AttackWithInvalidCardPlayer player0(SUIT_DIAMONDS, RANK_8);
+
+    BasePlayer player1;
+
+    GameCardsTracker tracker;
+
+    playRound(player0, player1, tracker);
+    // invalid card should not left the game
+    CPPUNIT_ASSERT(tracker.goneCards().find(player0.invalidCard()) == tracker.goneCards().end());
+}
+
+void GameTest::testInvalidCards02()
+{
+    // player defends with card is not in suggested set
+    DefendWithInvalidCardPlayer player1(SUIT_HEARTS, RANK_10);
+
+    BasePlayer player0;
+
+    GameCardsTracker tracker;
+
+    playRound(player0, player1, tracker);
+    // invalid card should not left the game
+    CPPUNIT_ASSERT(tracker.goneCards().find(player1.invalidCard()) == tracker.goneCards().end());
+}
+
+void GameTest::testInvalidCards03()
+{
+    // player defends with card which value is from suggested set but it is not located in the set
+    DefendWithInvalidCardPlayer player1(SUIT_SPADES, RANK_9);
+
+    BasePlayer player0;
+
+    GameCardsTracker tracker;
+
+    playRound(player0, player1, tracker);
+    // invalid card should not left the game
+    CPPUNIT_ASSERT(tracker.goneCards().find(player1.invalidCard()) == tracker.goneCards().end());
+}
+
 GameTest::Observer::Observer()
     : mCurrentRoundIndex(-1)
     , mCurrentRoundData(NULL)
@@ -692,6 +749,46 @@ void GameTest::TestPlayer0::init(decore::DataReader& reader)
     BasePlayer::init(reader);
 }
 
+GameTest::AttackWithInvalidCardPlayer::AttackWithInvalidCardPlayer(Suit suit, Rank rank)
+    : mInvalidCard(suit, rank)
+{
+}
+
+const Card& GameTest::AttackWithInvalidCardPlayer::attack(const PlayerId* playerId, const CardSet& cardSet)
+{
+    if (cardSet.find(mInvalidCard) != cardSet.end()) {
+        removeCard(&mInvalidCard);
+        return mInvalidCard;
+    }
+    return BasePlayer::attack(playerId, cardSet);
+}
+
+const Card& GameTest::AttackWithInvalidCardPlayer::invalidCard()
+{
+    return mInvalidCard;
+}
+
+GameTest::DefendWithInvalidCardPlayer::DefendWithInvalidCardPlayer(Suit suit, Rank rank)
+    : mInvalidCard(suit, rank)
+{
+
+}
+
+const Card* GameTest::DefendWithInvalidCardPlayer::defend(const PlayerId* playerId, const Card& attackCard, const CardSet& cardSet)
+{
+    if (cardSet.find(mInvalidCard) != cardSet.end()) {
+        removeCard(&mInvalidCard);
+        return &mInvalidCard;
+    }
+    return BasePlayer::defend(playerId, attackCard, cardSet);
+}
+
+
+const Card& GameTest::DefendWithInvalidCardPlayer::invalidCard()
+{
+    return mInvalidCard;
+}
+
 void GameTest::TestPlayer0::roundStarted(unsigned int roundIndex, const std::vector<const PlayerId *> attackers, const PlayerId *defender)
 {
     Observer::roundStarted(roundIndex, attackers, defender);
@@ -702,4 +799,40 @@ void GameTest::TestPlayer0::roundEnded(unsigned int roundIndex)
 {
     Observer::roundEnded(roundIndex);
     BasePlayer::roundEnded(roundIndex);
+}
+
+void GameTest::playRound(Player& player0, Player& player1, GameCardsTracker& observer)
+{
+    Engine engine;
+
+    std::vector<Player*> players;
+    players.push_back(&player0);
+    players.push_back(&player1);
+
+    for(std::vector<Player*>::iterator it = players.begin(); it != players.end(); ++ it) {
+        CPPUNIT_ASSERT(engine.add(**it));
+    }
+
+    Deck deck;
+
+    deck.push_back(Card(SUIT_SPADES, RANK_6));
+    deck.push_back(Card(SUIT_SPADES, RANK_7));
+
+    deck.push_back(Card(SUIT_CLUBS, RANK_6));
+    deck.push_back(Card(SUIT_CLUBS, RANK_7));
+
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_8));
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_9));
+
+    deck.push_back(Card(SUIT_SPADES, RANK_8));
+    deck.push_back(Card(SUIT_SPADES, RANK_9));
+
+    deck.push_back(Card(SUIT_DIAMONDS, RANK_ACE));
+
+    engine.addGameObserver(observer);
+
+    CPPUNIT_ASSERT(engine.setDeck(deck));
+
+    CPPUNIT_ASSERT(observer.deckCards() == 9);
+    engine.playRound();
 }

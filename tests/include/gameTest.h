@@ -5,6 +5,7 @@
 #include "cardSet.h"
 #include "player.h"
 #include "basePlayer.h"
+#include "gameCardsTracker.h"
 
 class GameTest: public CppUnit::TestFixture
 {
@@ -19,6 +20,10 @@ class GameTest: public CppUnit::TestFixture
     CPPUNIT_TEST(testPitch00);
     CPPUNIT_TEST(testPitch01);
     CPPUNIT_TEST(testMoveTransfer00);
+    CPPUNIT_TEST(testInvalidCards00);
+    CPPUNIT_TEST(testInvalidCards01);
+    CPPUNIT_TEST(testInvalidCards02);
+    CPPUNIT_TEST(testInvalidCards03);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -32,6 +37,10 @@ public:
     void testPitch00();
     void testPitch01();
     void testMoveTransfer00();
+    void testInvalidCards00();
+    void testInvalidCards01();
+    void testInvalidCards02();
+    void testInvalidCards03();
 
 private:
     class Observer : public decore::GameObserver
@@ -96,6 +105,25 @@ private:
         void save(decore::DataWriter& writer);
         void init(decore::DataReader& reader);
     };
+
+    class AttackWithInvalidCardPlayer : public BasePlayer
+    {
+        const Card mInvalidCard;
+    public:
+        AttackWithInvalidCardPlayer(Suit suit, Rank rank);
+        const Card& attack(const PlayerId* playerId, const CardSet& cardSet);
+        const Card& invalidCard();
+    };
+
+    class DefendWithInvalidCardPlayer : public BasePlayer
+    {
+        const Card mInvalidCard;
+    public:
+        DefendWithInvalidCardPlayer(Suit suit, Rank rank);
+        const Card* defend(const PlayerId* playerId, const Card& attackCard, const CardSet& cardSet);
+        const Card& invalidCard();
+    };
+    static void playRound(Player& player0, Player& player1, GameCardsTracker& observer);
 };
 
 #endif // GAMETEST_H

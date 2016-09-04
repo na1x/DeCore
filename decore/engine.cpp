@@ -102,6 +102,16 @@ void Engine::unlock() const
     pthread_mutex_unlock(&mLock);
 }
 
+bool Engine::findByPtr(const CardSet& cards, const Card* card)
+{
+    for (CardSet::const_iterator it = cards.begin(); it != cards.end(); ++it) {
+        if (&*it == card) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool Engine::playRound()
 {
     if (!mDeck) {
@@ -506,45 +516,45 @@ if (mQuit.get()) { \
 
             assert(attackCardPtr);
 
-            if(!attackCards.erase(*attackCardPtr)) {
+            if(!findByPtr(attackCards, attackCardPtr)) {
                 // invalid card returned - the card is not from attackCards
                 assert(!attackCards.empty());
                 // take any card
                 attackCardPtr = &*attackCards.begin();
             }
-        }
 
-        assert(attackCardPtr);
-        Card attackCard = *attackCardPtr;
+            Card attackCard = *attackCardPtr;
 
-        if (!mPickAttackCardFromTable) {
             lock();
             mTableCards.addAttackCard(attackCard);
             mPlayersCards[mCurrentRoundAttackerId].erase(attackCard);
             unlock();
             CHECK_QUIT;
             std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsDroppedNotification(mCurrentRoundAttackerId, attackCard));
+            // the card is removed from the `attackCards` and is added to `mTableCards`, so update its pointer
+            attackCardPtr = &*std::find(mTableCards.attackCards().begin(), mTableCards.attackCards().end(), attackCard);
         }
 
-        // TODO: probably no need to invoke this if mDefendFailed
-        CardSet defendCards = Rules::getDefendCards(attackCard, defenderCards, mDeck->trumpSuit());
+        if (!mDefendFailed) {
+            CardSet defendCards = Rules::getDefendCards(*attackCardPtr, defenderCards, mDeck->trumpSuit());
 
-        const Card* defendCardPtr = defender.defend(mCurrentRoundAttackerId, attackCard, defendCards);
+            const Card* defendCardPtr = defender.defend(mCurrentRoundAttackerId, *attackCardPtr, defendCards);
 
-        bool noCardsToDefend = defendCards.empty();
-        bool userGrabbedCards = !defendCardPtr;
-        bool invalidDefendCard = !defendCardPtr ? true : defendCards.find(*defendCardPtr) == defendCards.end();
+            bool noCardsToDefend = defendCards.empty();
+            bool userGrabbedCards = !defendCardPtr;
+            bool invalidDefendCard = !findByPtr(defendCards, defendCardPtr);
 
-        if(noCardsToDefend || userGrabbedCards || invalidDefendCard) {
-            // defend failed
-            mDefendFailed = true;
-        } else {
-            lock();
-            mTableCards.addDefendCard(*defendCardPtr);
-            defenderCards.erase(*defendCardPtr);
-            unlock();
-            CHECK_QUIT;
-            std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsDroppedNotification(mDefender, *defendCardPtr));
+            if(noCardsToDefend || userGrabbedCards || invalidDefendCard) {
+                // defend failed
+                mDefendFailed = true;
+            } else {
+                lock();
+                mTableCards.addDefendCard(*defendCardPtr);
+                defenderCards.erase(*defendCardPtr);
+                unlock();
+                CHECK_QUIT;
+                std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsDroppedNotification(mDefender, *defendCardPtr));
+            }
         }
         mPickAttackCardFromTable = false;
     }

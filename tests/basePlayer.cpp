@@ -156,6 +156,6 @@ void BasePlayer::removeCard(const decore::Card* card)
 {
     CPPUNIT_ASSERT(!mPlayerCards.empty());
     CardSet currentCards = *(mPlayerCards.end() - 1);
-    CPPUNIT_ASSERT(currentCards.erase(*card));
+    currentCards.erase(*card);
     mPlayerCards.push_back(currentCards);
 }

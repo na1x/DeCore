@@ -239,7 +239,7 @@ public:
     /**
      * @brief Saves current state of the game into the `write`
      *
-     * The feature could be used to save game state when application is being closed and to restore it's state on next start.
+     * The feature could be used to save game state when application is being closed and to restore its state on next start.
      * Note: make ensure that the data is used to restore the same version of the library, because next version of the library could add more data in the 'state'
      *
      * The library provides same save/init flow for game observers (via GameObserver::save()) for the convenience
@@ -413,6 +413,13 @@ private:
      * @brief Unlocks the instance
      */
     void unlock() const;
+    /**
+     * @brief Finds card by pointer in the `cards`
+     * @param cards array to search
+     * @param card card to find
+     * @return true if the `card` in un the array
+     */
+    bool findByPtr(const CardSet& cards, const Card* card);
 };
 
 }

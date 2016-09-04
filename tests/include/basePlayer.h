@@ -41,7 +41,7 @@ public:
     const CardSet& cards(unsigned int index) const;
     unsigned int cardSets() const;
 
-private:
+protected:
     void removeCard(const decore::Card* card);
 
 };
