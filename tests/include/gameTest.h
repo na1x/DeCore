@@ -109,19 +109,23 @@ private:
     class AttackWithInvalidCardPlayer : public BasePlayer
     {
         const Card mInvalidCard;
+        bool mDontCheckCardExist;
     public:
         AttackWithInvalidCardPlayer(Suit suit, Rank rank);
         const Card& attack(const PlayerId* playerId, const CardSet& cardSet);
         const Card& invalidCard();
+        void cardsUpdated(const CardSet& cardSet);
     };
 
     class DefendWithInvalidCardPlayer : public BasePlayer
     {
         const Card mInvalidCard;
+        bool mDontCheckCardExist;
     public:
         DefendWithInvalidCardPlayer(Suit suit, Rank rank);
         const Card* defend(const PlayerId* playerId, const Card& attackCard, const CardSet& cardSet);
         const Card& invalidCard();
+        void cardsUpdated(const CardSet& cardSet);
     };
     static void playRound(Player& player0, Player& player1, GameCardsTracker& observer);
 };

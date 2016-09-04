@@ -751,12 +751,13 @@ void GameTest::TestPlayer0::init(decore::DataReader& reader)
 
 GameTest::AttackWithInvalidCardPlayer::AttackWithInvalidCardPlayer(Suit suit, Rank rank)
     : mInvalidCard(suit, rank)
+    , mDontCheckCardExist(false)
 {
 }
 
 const Card& GameTest::AttackWithInvalidCardPlayer::attack(const PlayerId* playerId, const CardSet& cardSet)
 {
-    if (cardSet.find(mInvalidCard) != cardSet.end()) {
+    if (mDontCheckCardExist || cardSet.find(mInvalidCard) != cardSet.end()) {
         removeCard(&mInvalidCard);
         return mInvalidCard;
     }
@@ -768,15 +769,22 @@ const Card& GameTest::AttackWithInvalidCardPlayer::invalidCard()
     return mInvalidCard;
 }
 
+void GameTest::AttackWithInvalidCardPlayer::cardsUpdated(const CardSet& cardSet)
+{
+    mDontCheckCardExist= cardSet.find(mInvalidCard) == cardSet.end();
+}
+
+
 GameTest::DefendWithInvalidCardPlayer::DefendWithInvalidCardPlayer(Suit suit, Rank rank)
     : mInvalidCard(suit, rank)
+    , mDontCheckCardExist(false)
 {
 
 }
 
 const Card* GameTest::DefendWithInvalidCardPlayer::defend(const PlayerId* playerId, const Card& attackCard, const CardSet& cardSet)
 {
-    if (cardSet.find(mInvalidCard) != cardSet.end()) {
+    if (mDontCheckCardExist || cardSet.find(mInvalidCard) != cardSet.end()) {
         removeCard(&mInvalidCard);
         return &mInvalidCard;
     }
@@ -788,6 +796,12 @@ const Card& GameTest::DefendWithInvalidCardPlayer::invalidCard()
 {
     return mInvalidCard;
 }
+
+void GameTest::DefendWithInvalidCardPlayer::cardsUpdated(const CardSet& cardSet)
+{
+    mDontCheckCardExist= cardSet.find(mInvalidCard) == cardSet.end();
+}
+
 
 void GameTest::TestPlayer0::roundStarted(unsigned int roundIndex, const std::vector<const PlayerId *> attackers, const PlayerId *defender)
 {

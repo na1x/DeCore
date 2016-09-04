@@ -154,7 +154,9 @@ const CardSet& BasePlayer::cards(unsigned int index) const
 
 void BasePlayer::removeCard(const decore::Card* card)
 {
-    CPPUNIT_ASSERT(!mPlayerCards.empty());
+    if (mPlayerCards.empty()) {
+        return;
+    }
     CardSet currentCards = *(mPlayerCards.end() - 1);
     currentCards.erase(*card);
     mPlayerCards.push_back(currentCards);
