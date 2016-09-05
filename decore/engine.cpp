@@ -535,28 +535,35 @@ if (mQuit.get()) { \
             attackCardPtr = &*std::find(mTableCards.attackCards().begin(), mTableCards.attackCards().end(), attackCard);
         }
 
-        if (!mDefendFailed) {
-            CardSet defendCards = Rules::getDefendCards(*attackCardPtr, defenderCards, mDeck->trumpSuit());
-
-            const Card* defendCardPtr = defender.defend(mCurrentRoundAttackerId, *attackCardPtr, defendCards);
-
-            bool noCardsToDefend = defendCards.empty();
-            bool userGrabbedCards = !defendCardPtr;
-            bool invalidDefendCard = !findByPtr(defendCards, defendCardPtr);
-
-            if(noCardsToDefend || userGrabbedCards || invalidDefendCard) {
-                // defend failed
-                mDefendFailed = true;
-            } else {
-                lock();
-                mTableCards.addDefendCard(*defendCardPtr);
-                defenderCards.erase(*defendCardPtr);
-                unlock();
-                CHECK_QUIT;
-                std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsDroppedNotification(mDefender, *defendCardPtr));
-            }
+        if (mDefendFailed) {
+            continue;
         }
+
+        CardSet defendCards = Rules::getDefendCards(*attackCardPtr, defenderCards, mDeck->trumpSuit());
+
+        const Card* defendCardPtr = defender.defend(mCurrentRoundAttackerId, *attackCardPtr, defendCards);
+
+        bool noCardsToDefend = defendCards.empty();
+        bool userGrabbedCards = !defendCardPtr;
+        bool invalidDefendCard = !findByPtr(defendCards, defendCardPtr);
+
+        lock();
         mPickAttackCardFromTable = false;
+        unlock();
+
+        if(noCardsToDefend || userGrabbedCards || invalidDefendCard) {
+            // defend failed
+            lock();
+            mDefendFailed = true;
+            unlock();
+        } else {
+            lock();
+            mTableCards.addDefendCard(*defendCardPtr);
+            defenderCards.erase(*defendCardPtr);
+            unlock();
+            CHECK_QUIT;
+            std::for_each(mGameObservers.begin(), mGameObservers.end(), CardsDroppedNotification(mDefender, *defendCardPtr));
+        }
     }
 
     if (mDefendFailed) {

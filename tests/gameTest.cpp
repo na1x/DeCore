@@ -4,6 +4,7 @@
 #include "deck.h"
 #include "defines.h"
 #include "gameCardsTracker.h"
+#include "observer.h"
 
 using namespace decore;
 
@@ -540,161 +541,75 @@ void GameTest::testMoveTransfer00()
 void GameTest::testInvalidCards00()
 {
     // player attacks with card which is not from suggested set
-    AttackWithInvalidCardPlayer player0(SUIT_CLUBS, RANK_ACE);
+    Card invalidCard(SUIT_CLUBS, RANK_ACE);
+    AttackWithInvalidCardPlayer player0(invalidCard);
 
     BasePlayer player1;
 
     GameCardsTracker tracker;
+    Observer observer;
 
-    playRound(player0, player1, tracker);
+    playRound(player0, player1, tracker, observer);
 
     const CardSet& goneCards = tracker.goneCards();
     CPPUNIT_ASSERT(goneCards.find(player0.invalidCard()) == goneCards.end());
+    CPPUNIT_ASSERT(!observer.mRoundsData.empty());
+    CPPUNIT_ASSERT(observer.mRoundsData[0]->mDroppedCards.at(player0.id()).find(invalidCard) == observer.mRoundsData[0]->mDroppedCards.at(player0.id()).end());
 }
 
 void GameTest::testInvalidCards01()
 {
     // player attacks with card which value is from suggested set but it is not located in the set
-    AttackWithInvalidCardPlayer player0(SUIT_DIAMONDS, RANK_8);
+    Card invalidCard(SUIT_DIAMONDS, RANK_8);
+    AttackWithInvalidCardPlayer player0(invalidCard);
 
     BasePlayer player1;
 
     GameCardsTracker tracker;
+    Observer observer;
 
-    playRound(player0, player1, tracker);
+    playRound(player0, player1, tracker, observer);
     // invalid card should not left the game
     CPPUNIT_ASSERT(tracker.goneCards().find(player0.invalidCard()) == tracker.goneCards().end());
+    CPPUNIT_ASSERT(!observer.mRoundsData.empty());
+    CPPUNIT_ASSERT(observer.mRoundsData[0]->mDroppedCards.at(player0.id()).find(invalidCard) == observer.mRoundsData[0]->mDroppedCards.at(player0.id()).end());
 }
 
 void GameTest::testInvalidCards02()
 {
     // player defends with card is not in suggested set
-    DefendWithInvalidCardPlayer player1(SUIT_HEARTS, RANK_10);
+    Card invalidCard(SUIT_HEARTS, RANK_10);
+    DefendWithInvalidCardPlayer player1(invalidCard);
 
     BasePlayer player0;
 
     GameCardsTracker tracker;
+    Observer observer;
 
-    playRound(player0, player1, tracker);
+    playRound(player0, player1, tracker, observer);
     // invalid card should not left the game
     CPPUNIT_ASSERT(tracker.goneCards().find(player1.invalidCard()) == tracker.goneCards().end());
+    CPPUNIT_ASSERT(!observer.mRoundsData.empty());
+    CPPUNIT_ASSERT(observer.mRoundsData[0]->mDroppedCards.find(player1.id()) == observer.mRoundsData[0]->mDroppedCards.end());
 }
 
 void GameTest::testInvalidCards03()
 {
     // player defends with card which value is from suggested set but it is not located in the set
-    DefendWithInvalidCardPlayer player1(SUIT_SPADES, RANK_9);
+    Card invalidCard(SUIT_SPADES, RANK_9);
+    DefendWithInvalidCardPlayer player1(invalidCard);
 
     BasePlayer player0;
 
     GameCardsTracker tracker;
+    Observer observer;
 
-    playRound(player0, player1, tracker);
+    playRound(player0, player1, tracker, observer);
     // invalid card should not left the game
     CPPUNIT_ASSERT(tracker.goneCards().find(player1.invalidCard()) == tracker.goneCards().end());
+    CPPUNIT_ASSERT(!observer.mRoundsData.empty());
+    CPPUNIT_ASSERT(observer.mRoundsData[0]->mDroppedCards.find(player1.id()) == observer.mRoundsData[0]->mDroppedCards.end());
 }
-
-GameTest::Observer::Observer()
-    : mCurrentRoundIndex(-1)
-    , mCurrentRoundData(NULL)
-{
-
-}
-
-GameTest::Observer::~Observer()
-{
-    for (std::vector<const RoundData*>::iterator it = mRoundsData.begin(); it != mRoundsData.end(); ++it) {
-        delete *it;
-    }
-}
-
-void GameTest::Observer::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> &players)
-{
-    mPlayers = players;
-    mTrumpSuit = trumpSuit;
-    mGameCards = cardSet;
-    for(std::vector<const PlayerId*>::iterator it = mPlayers.begin(); it != mPlayers.end(); ++it) {
-        mPlayersCards[*it] = 0;
-    }
-    mGameCardsCount = mGameCards.size();
-}
-
-void GameTest::Observer::cardsGone(const CardSet &cardSet)
-{
-    mGameCardsCount -= cardSet.size();
-}
-
-void GameTest::Observer::cardsDropped(const PlayerId *playerId, const CardSet &cardSet)
-{
-    mPlayersCards[playerId] -= cardSet.size();
-    CardSet& set = mCurrentRoundData->mDroppedCards[playerId];
-    unsigned int oldSize = set.size();
-    set.insert(cardSet.begin(), cardSet.end());
-    CPPUNIT_ASSERT(oldSize + cardSet.size() == set.size());
-}
-
-void GameTest::Observer::cardsPickedUp(const PlayerId *playerId, const CardSet &cardSet)
-{
-    mPlayersCards[playerId] += cardSet.size();
-    CardSet& set = mCurrentRoundData->mPickedUpCards[playerId];
-    unsigned int oldSize = set.size();
-    set.insert(cardSet.begin(), cardSet.end());
-    CPPUNIT_ASSERT(oldSize + cardSet.size() == set.size());
-}
-
-void GameTest::Observer::cardsDealed(const PlayerId *playerId, unsigned int cardsAmount)
-{
-    mPlayersCards[playerId] += cardsAmount;
-    mGameCardsCount -= cardsAmount;
-}
-
-void GameTest::Observer::roundStarted(unsigned int roundIndex, const std::vector<const PlayerId *> attackers, const PlayerId *defender)
-{
-    CPPUNIT_ASSERT(mCurrentRoundIndex != roundIndex);
-    mCurrentRoundIndex = roundIndex;
-    CPPUNIT_ASSERT(!mCurrentRoundData);
-    mCurrentRoundData = new RoundData();
-    std::copy(attackers.begin(), attackers.end(), std::inserter(mCurrentRoundData->mPlayers, mCurrentRoundData->mPlayers.begin()));
-    mCurrentRoundData->mPlayers.push_back(defender);
-}
-
-void GameTest::Observer::roundEnded(unsigned int roundIndex)
-{
-    CPPUNIT_ASSERT(mCurrentRoundIndex == roundIndex);
-    mRoundsData.push_back(mCurrentRoundData);
-    mCurrentRoundData = NULL;
-}
-
-void GameTest::Observer::gameRestored(const std::vector<const PlayerId*>& playerIds,
-    const std::map<const PlayerId*, unsigned int>& playersCards,
-    unsigned int deckCards,
-    const Suit& trumpSuit,
-    const std::vector<Card>& attackCards,
-    const std::vector<Card>& defendCards)
-{
-    (void) playerIds;
-    (void) playersCards;
-    (void) deckCards;
-    (void) trumpSuit;
-    (void) attackCards;
-    (void) defendCards;
-}
-
-void GameTest::Observer::save(DataWriter& writer)
-{
-    // do nothing
-    // actually there is a lot of info to save, but the test does not use save/init cases
-    (void) writer;
-}
-
-void GameTest::Observer::init(DataReader& reader)
-{
-    // do nothing
-    // do nothing
-    // actually there is a lot of info to save, but the test does not use save/init cases
-    (void) reader;
-}
-
 
 void GameTest::TestPlayer0::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> &players)
 {
@@ -749,8 +664,8 @@ void GameTest::TestPlayer0::init(decore::DataReader& reader)
     BasePlayer::init(reader);
 }
 
-GameTest::AttackWithInvalidCardPlayer::AttackWithInvalidCardPlayer(Suit suit, Rank rank)
-    : mInvalidCard(suit, rank)
+GameTest::AttackWithInvalidCardPlayer::AttackWithInvalidCardPlayer(const Card& card)
+    : mInvalidCard(card)
     , mDontCheckCardExist(false)
 {
 }
@@ -775,8 +690,8 @@ void GameTest::AttackWithInvalidCardPlayer::cardsUpdated(const CardSet& cardSet)
 }
 
 
-GameTest::DefendWithInvalidCardPlayer::DefendWithInvalidCardPlayer(Suit suit, Rank rank)
-    : mInvalidCard(suit, rank)
+GameTest::DefendWithInvalidCardPlayer::DefendWithInvalidCardPlayer(const Card& card)
+    : mInvalidCard(card)
     , mDontCheckCardExist(false)
 {
 
@@ -815,7 +730,7 @@ void GameTest::TestPlayer0::roundEnded(unsigned int roundIndex)
     BasePlayer::roundEnded(roundIndex);
 }
 
-void GameTest::playRound(Player& player0, Player& player1, GameCardsTracker& observer)
+void GameTest::playRound(Player& player0, Player& player1, GameCardsTracker& tracker, GameObserver& observer)
 {
     Engine engine;
 
@@ -843,10 +758,11 @@ void GameTest::playRound(Player& player0, Player& player1, GameCardsTracker& obs
 
     deck.push_back(Card(SUIT_DIAMONDS, RANK_ACE));
 
+    engine.addGameObserver(tracker);
     engine.addGameObserver(observer);
 
     CPPUNIT_ASSERT(engine.setDeck(deck));
 
-    CPPUNIT_ASSERT(observer.deckCards() == 9);
+    CPPUNIT_ASSERT(tracker.deckCards() == 9);
     engine.playRound();
 }

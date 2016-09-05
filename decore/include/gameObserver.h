@@ -106,6 +106,7 @@ public:
      * @see save()
      */
     virtual void init(DataReader& reader) = 0;
+    // TODO: add quit?
 };
 
 }

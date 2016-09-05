@@ -11,6 +11,7 @@
 #include "dataWriter.h"
 #include "dataReader.h"
 #include "gameCardsTracker.h"
+#include "observer.h"
 
 using namespace decore;
 
@@ -118,7 +119,8 @@ private:
     };
     static void* testThread(void* data);
     static void generate(Deck& deck);
-    static void test(Player& player0, Player& player1, Player& restoredPlayer0, Player& restoredPlayer1, PlayerSyncData& syncData, GameCardsTracker& restoredTracker, Engine& restored);
+    static void test(Player& player0, Player& player1, Player& restoredPlayer0, Player& restoredPlayer1, PlayerSyncData& syncData,
+        GameCardsTracker& restoredTracker, Engine& restored, Observer& restoredObserver);
     static void checkNoDeal(std::vector<BasePlayer*> players);
 };
 

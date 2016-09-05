@@ -138,8 +138,10 @@ void* SaveRestoreTest::testThread(void* data)
     engine.add(threadData.mPlayer0);
     engine.add(threadData.mPlayer1);
 
-    GameCardsTracker observer;
+    GameCardsTracker tracker;
+    Observer observer;
 
+    engine.addGameObserver(tracker);
     engine.addGameObserver(observer);
 
     Deck deck;
@@ -155,7 +157,8 @@ void* SaveRestoreTest::testThread(void* data)
     return NULL;
 }
 
-void SaveRestoreTest::test(Player& player0, Player& player1, Player& restoredPlayer0, Player& restoredPlayer1, PlayerSyncData& syncData, GameCardsTracker& restoredTracker, Engine& restored) {
+void SaveRestoreTest::test(Player& player0, Player& player1, Player& restoredPlayer0, Player& restoredPlayer1, PlayerSyncData& syncData,
+                           GameCardsTracker& restoredTracker, Engine& restored, Observer& restoredObserver) {
     // start game in separate thread
     // save the game and terminate
     // create new game from saved data
@@ -191,6 +194,7 @@ void SaveRestoreTest::test(Player& player0, Player& player1, Player& restoredPla
 
     std::vector<GameObserver*> observers;
     observers.push_back(&restoredTracker);
+    observers.push_back(&restoredObserver);
 
     TestReader reader(savedData.mBytes);
     restored.init(reader, restoredPlayers, observers);
@@ -257,8 +261,9 @@ void SaveRestoreTest::test00()
     BasePlayer restoredPlayer0, restoredPlayer1;
     Engine restored;
     GameCardsTracker tracker;
+    Observer observer;
 
-    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored);
+    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored, observer);
 
     for (PlayerIds::const_iterator it = tracker.playerIds().begin(); it != tracker.playerIds().end(); ++it) {
         const PlayerCards& playerCards = tracker.playerCards(*it);
@@ -297,8 +302,9 @@ void SaveRestoreTest::test01()
     BasePlayer restoredPlayer0, restoredPlayer1;
     Engine restored;
     GameCardsTracker tracker;
+    Observer observer;
 
-    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored);
+    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored, observer);
 
     for (PlayerIds::const_iterator it = tracker.playerIds().begin(); it != tracker.playerIds().end(); ++it) {
         const PlayerCards& playerCards = tracker.playerCards(*it);
@@ -337,8 +343,9 @@ void SaveRestoreTest::test02()
     BasePlayer restoredPlayer0, restoredPlayer1;
     Engine restored;
     GameCardsTracker tracker;
+    Observer observer;
 
-    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored);
+    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored, observer);
 
     for (PlayerIds::const_iterator it = tracker.playerIds().begin(); it != tracker.playerIds().end(); ++it) {
         const PlayerCards& playerCards = tracker.playerCards(*it);
@@ -377,8 +384,9 @@ void SaveRestoreTest::test03()
     BasePlayer restoredPlayer0, restoredPlayer1;
     Engine restored;
     GameCardsTracker tracker;
+    Observer observer;
 
-    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored);
+    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored, observer);
 
     CPPUNIT_ASSERT(MAX_CARDS - 1 == tracker.playerCards(restoredPlayer0.id()).unknownCards()); // attack done
     CPPUNIT_ASSERT(MAX_CARDS == tracker.playerCards(restoredPlayer1.id()).unknownCards());
@@ -415,8 +423,9 @@ void SaveRestoreTest::test04()
     BasePlayer restoredPlayer0, restoredPlayer1;
     Engine restored;
     GameCardsTracker tracker;
+    Observer observer;
 
-    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored);
+    test(player0, player1, restoredPlayer0, restoredPlayer1, syncData, tracker, restored, observer);
 
     CPPUNIT_ASSERT(MAX_CARDS - 2 == tracker.playerCards(restoredPlayer0.id()).unknownCards()); // attack done
     CPPUNIT_ASSERT(MAX_CARDS - 1 == tracker.playerCards(restoredPlayer1.id()).unknownCards());
