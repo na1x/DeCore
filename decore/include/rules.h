@@ -2,6 +2,7 @@
 #define RULES_H
 
 #include <vector>
+#include <map>
 
 #include "card.h"
 
@@ -43,9 +44,10 @@ public:
      * @brief Returns next player in the player queue after the player
      * @param playersList list of the player
      * @param after defines player id
+     * @param playersCards player cards to lookup if the player has cards, optional
      * @return next player id
      */
-    static const PlayerId *pickNext(const std::vector<const PlayerId *> &playersList, const PlayerId *after);
+    static const PlayerId *pickNext(const std::vector<const PlayerId *> &playersList, const PlayerId *after, const std::map<const PlayerId*, CardSet>* playersCards = NULL);
     /**
      * @brief Deals cards from the set to the players up to MAX_PLAYER_CARDS
      *

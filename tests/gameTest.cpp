@@ -538,6 +538,53 @@ void GameTest::testMoveTransfer00()
     CPPUNIT_ASSERT(round1.mPickedUpCards.empty());
 }
 
+void GameTest::testMoveTransfer01()
+{
+    // player0 has one card
+    // player1 has no cards to defend
+    // move goes to player2
+    // ensure that player2 attacks player1 and not player0, because latter has no cards to defend
+    Engine engine;
+    TestPlayer0 player0, player1, player2;
+
+    std::vector<TestPlayer0*> players;
+    players.push_back(&player0);
+    players.push_back(&player1);
+    players.push_back(&player2);
+
+    std::vector<const PlayerId*> playerIds;
+    for(std::vector<TestPlayer0*>::iterator it = players.begin(); it != players.end(); ++ it) {
+        playerIds.push_back(engine.add(**it));
+    }
+
+    Observer observer;
+
+    engine.addGameObserver(observer);
+
+    Deck deck;
+
+    deck.push_back(Card(SUIT_SPADES, RANK_8));
+    deck.push_back(Card(SUIT_SPADES, RANK_7));
+    deck.push_back(Card(SUIT_SPADES, RANK_6));
+
+    CPPUNIT_ASSERT(engine.setDeck(deck));
+
+    CPPUNIT_ASSERT(engine.playRound());
+    CPPUNIT_ASSERT(observer.rounds() == 1);
+    const Observer::RoundData& firstRound = *observer.roundData(0);
+    CPPUNIT_ASSERT(firstRound.mDroppedCards.size() == 1);
+    CPPUNIT_ASSERT(firstRound.mDroppedCards.find(player0.id()) != firstRound.mDroppedCards.end());
+    CPPUNIT_ASSERT(firstRound.mPickedUpCards.size() == 1);
+    CPPUNIT_ASSERT(firstRound.mPickedUpCards.find(player1.id()) != firstRound.mPickedUpCards.end());
+    CPPUNIT_ASSERT(!engine.playRound());
+    CPPUNIT_ASSERT(observer.rounds() == 2);
+    const Observer::RoundData& secondRound = *observer.roundData(1);
+    CPPUNIT_ASSERT(secondRound.mDroppedCards.size() == 2);
+    CPPUNIT_ASSERT(secondRound.mDroppedCards.find(player2.id()) != secondRound.mDroppedCards.end());
+    CPPUNIT_ASSERT(secondRound.mDroppedCards.find(player1.id()) != secondRound.mDroppedCards.end());
+    CPPUNIT_ASSERT(secondRound.mPickedUpCards.size() == 0);
+}
+
 void GameTest::testInvalidCards00()
 {
     // player attacks with card which is not from suggested set

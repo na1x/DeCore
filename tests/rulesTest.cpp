@@ -4,13 +4,51 @@
 #include "cardSet.h"
 #include "deck.h"
 #include "defines.h"
+#include "playerIds.h"
 
 class Id : public decore::PlayerId
 {
 
 };
 
-void RulesTest::testPickNext()
+void RulesTest::testPickNext00()
+{
+    using namespace decore;
+    PlayerIds playerIds;
+
+    const unsigned int IDS = 5;
+
+    // add players
+    for (unsigned int i = 0; i < IDS; ++i) {
+        playerIds.push_back(new Id());
+    }
+
+    std::map<const PlayerId*, CardSet> cards;
+    for (PlayerIds::const_iterator it = playerIds.begin(); it != playerIds.end(); ++it) {
+        cards[*it] = CardSet();
+        cards[*it].insert(Card(SUIT_CLUBS, RANK_6));
+    }
+
+    // check that there's no next player for not existing player id
+    CPPUNIT_ASSERT(!Rules::pickNext(playerIds, NULL, &cards));
+
+    // check pickNext
+    for(PlayerIds::const_iterator it = playerIds.begin(); it != playerIds.end(); ++it) {
+        PlayerIds::const_iterator next = it + 1;
+        if (next == playerIds.end()) {
+            next = playerIds.begin();
+        }
+        const PlayerId* nextId = Rules::pickNext(playerIds, *it, &cards);
+        CPPUNIT_ASSERT(*next == nextId);
+    }
+
+    // cleanup players
+    for(PlayerIds::const_iterator it = playerIds.begin(); it != playerIds.end(); ++it) {
+        delete *it;
+    }
+}
+
+void RulesTest::testPickNext01()
 {
     using namespace decore;
     std::vector<const PlayerId*> playerIds;
@@ -22,16 +60,27 @@ void RulesTest::testPickNext()
         playerIds.push_back(new Id());
     }
 
+    std::map<const PlayerId*, CardSet> cards;
+    for (PlayerIds::const_iterator it = playerIds.begin(); it != playerIds.end(); ++it) {
+        cards[*it] = CardSet();
+        if (*it != playerIds[1]) {
+            cards[*it].insert(Card(SUIT_CLUBS, RANK_6));
+        }
+    }
+
     // check that there's no next player for not existing player id
-    CPPUNIT_ASSERT(!Rules::pickNext(playerIds, NULL));
+    CPPUNIT_ASSERT(!Rules::pickNext(playerIds, NULL, &cards));
 
     // check pickNext
     for(std::vector<const PlayerId*>::iterator it = playerIds.begin(); it != playerIds.end(); ++it) {
         std::vector<const PlayerId*>::iterator next = it + 1;
         if (next == playerIds.end()) {
             next = playerIds.begin();
+        } else if (*next == playerIds[1]) {
+            ++next;
+            CPPUNIT_ASSERT(next != playerIds.end());
         }
-        CPPUNIT_ASSERT(*next == Rules::pickNext(playerIds, *it));
+        CPPUNIT_ASSERT(*next == Rules::pickNext(playerIds, *it, &cards));
     }
 
     // cleanup players

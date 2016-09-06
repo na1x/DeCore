@@ -21,6 +21,7 @@ class GameTest: public CppUnit::TestFixture
     CPPUNIT_TEST(testPitch00);
     CPPUNIT_TEST(testPitch01);
     CPPUNIT_TEST(testMoveTransfer00);
+    CPPUNIT_TEST(testMoveTransfer01);
     CPPUNIT_TEST(testInvalidCards00);
     CPPUNIT_TEST(testInvalidCards01);
     CPPUNIT_TEST(testInvalidCards02);
@@ -38,6 +39,7 @@ public:
     void testPitch00();
     void testPitch01();
     void testMoveTransfer00();
+    void testMoveTransfer01();
     void testInvalidCards00();
     void testInvalidCards01();
     void testInvalidCards02();

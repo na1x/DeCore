@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <assert.h>
 
 #include "rules.h"
 #include "cardSet.h"
@@ -55,7 +56,7 @@ CardSet Rules::getDefendCards(const Card &card, const CardSet &playerCards, cons
     return result;
 }
 
-const PlayerId *Rules::pickNext(const std::vector<const PlayerId*>& playersList, const PlayerId* after)
+const PlayerId *Rules::pickNext(const std::vector<const PlayerId*>& playersList, const PlayerId* after, const std::map<const PlayerId*, CardSet>* playersCards)
 {
     std::vector<const PlayerId*>::const_iterator current = std::find(playersList.begin(), playersList.end(), after);
 
@@ -63,11 +64,25 @@ const PlayerId *Rules::pickNext(const std::vector<const PlayerId*>& playersList,
         return NULL;
     }
 
-    std::vector<const PlayerId*>::const_iterator next = current + 1;
+    bool playerHasNoCards = false;
+    std::vector<const PlayerId*>::const_iterator next = current;
 
-    if (playersList.end() == next) {
-        next = playersList.begin();
-    }
+    do {
+        ++next;
+        if (playersList.end() == next) {
+            next = playersList.begin();
+        }
+        if (current == next) {
+            // no player found
+            return NULL;
+        }
+        if (playersCards) {
+            assert(playersCards->find(*next) != playersCards->end());
+            playerHasNoCards = playersCards->at(*next).empty();
+        } else {
+            playerHasNoCards = false;
+        }
+    } while (playerHasNoCards);
     return *next;
 }
 

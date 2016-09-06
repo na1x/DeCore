@@ -6,7 +6,8 @@
 class RulesTest : public CppUnit::TestFixture
 {
     CPPUNIT_TEST_SUITE(RulesTest);
-    CPPUNIT_TEST(testPickNext);
+    CPPUNIT_TEST(testPickNext00);
+    CPPUNIT_TEST(testPickNext01);
     CPPUNIT_TEST(testAttackCards);
     CPPUNIT_TEST(testDefendCards);
     CPPUNIT_TEST(testDeal0);
@@ -14,7 +15,8 @@ class RulesTest : public CppUnit::TestFixture
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    void testPickNext();
+    void testPickNext00();
+    void testPickNext01();
     void testAttackCards();
     void testDefendCards();
     void testDeal0();

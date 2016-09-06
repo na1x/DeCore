@@ -156,7 +156,12 @@ class Engine
      * @brief Internal data synchronization lock
      */
     mutable pthread_mutex_t mLock;
-
+#ifndef NDEBUG
+    /**
+     * @brief Lock flag for lock/unlock debug
+     */
+    mutable bool mLocked;
+#endif // NDEBUG
     /**
      * @brief Quit flag
      */

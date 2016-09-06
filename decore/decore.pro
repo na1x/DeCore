@@ -14,6 +14,7 @@ CONFIG += staticlib
 QMAKE_CXXFLAGS += -Wall -Wextra
 
 INCLUDEPATH += include
+DEPENDPATH += include
 
 SOURCES += \
     card.cpp \

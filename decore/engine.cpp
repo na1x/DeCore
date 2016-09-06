@@ -17,6 +17,9 @@ Engine::Engine()
     , mCurrentPlayer(NULL)
     , mRoundIndex(0)
     , mDefender(NULL)
+#ifndef NDEBUG
+    , mLocked(false)
+#endif
     , mQuit(false)
     , mCurrentRoundAttackerId(NULL)
     , mPassedCounter(0)
@@ -96,10 +99,18 @@ bool Engine::setDeck(const Deck &deck)
 void Engine::lock() const
 {
     pthread_mutex_lock(&mLock);
+#ifndef NDEBUG
+    assert(!mLocked);
+    mLocked = true;
+#endif
 }
 
 void Engine::unlock() const
 {
+#ifndef NDEBUG
+    assert(mLocked);
+    mLocked = false;
+#endif
     pthread_mutex_unlock(&mLock);
 }
 
@@ -129,23 +140,6 @@ bool Engine::playRound()
         return false;
     }
 
-    lock();
-
-    if (mAttackers.empty()) {
-        // prepare round data
-        // pick current player as first attacker
-        mAttackers.push_back(mCurrentPlayer);
-        // pick next player as defender
-        mDefender = Rules::pickNext(mGeneratedIds, mCurrentPlayer);
-        // gather rest players as additional attackers
-        const PlayerId* attacker = mDefender;
-        while((attacker = Rules::pickNext(mGeneratedIds, attacker)) != mCurrentPlayer) {
-            mAttackers.push_back(attacker);
-        }
-    }
-
-    unlock();
-
     bool defended = playCurrentRound();
 
     lock();
@@ -154,7 +148,7 @@ bool Engine::playRound()
 
     // if attack failed "next move" goes to defender
     // or to next player after the defender otherwise
-    mCurrentPlayer = defended ? mDefender : Rules::pickNext(mGeneratedIds, mDefender);
+    mCurrentPlayer = defended ? mDefender : Rules::pickNext(mGeneratedIds, mDefender, &mPlayersCards);
 
     // cleanup
     mAttackers.clear();
@@ -459,27 +453,37 @@ if (mQuit.get()) { \
     lock();
     if (!mCurrentRoundIndex) {
         mCurrentRoundIndex = &mRoundIndex;
+        // prepare round data
+        // pick current player as first attacker
+        mAttackers.push_back(mCurrentPlayer);
+        // if there was no deal yet (very first round) - do not consider cards while picking next players
+        std::map<const PlayerId*, CardSet>* cards = *mCurrentRoundIndex ? &mPlayersCards : NULL;
+        // pick next player as defender
+        mDefender = Rules::pickNext(mGeneratedIds, mCurrentPlayer, cards);
+        // gather rest players as additional attackers
+        const PlayerId* attacker = mDefender;
+        while((attacker = Rules::pickNext(mGeneratedIds, attacker, cards)) != mCurrentPlayer) {
+            if (attacker) {
+                mAttackers.push_back(attacker);
+            }
+        }
         unlock();
         std::for_each(mGameObservers.begin(), mGameObservers.end(), RoundStartNotification(mAttackers, mDefender, mRoundIndex));
         // deal cards
         dealCards();
-    } else {
-        unlock();
+        lock();
+        mMaxAttackCards = Rules::maxAttackCards(mPlayersCards[mDefender].size());
+        assert(mMaxAttackCards);
     }
 
-    lock();
+    CardSet& defenderCards = mPlayersCards[mDefender];
 
     if (!mCurrentRoundAttackerId) {
         mCurrentRoundAttackerId = mAttackers[0];
         mPassedCounter = 0;
     }
 
-    CardSet& defenderCards = mPlayersCards[mDefender];
     Player& defender = *mPlayers[mDefender];
-
-    if (!mMaxAttackCards) {
-        mMaxAttackCards = Rules::maxAttackCards(defenderCards.size());
-    }
 
     unlock();
 
@@ -513,7 +517,7 @@ if (mQuit.get()) { \
             if (attackCards.empty() || !attackCardPtr) {
                 lock();
                 // player skipped the move - pick next attacker
-                mCurrentRoundAttackerId = Rules::pickNext(mAttackers, mCurrentRoundAttackerId);
+                mCurrentRoundAttackerId = Rules::pickNext(mAttackers, mCurrentRoundAttackerId, &mPlayersCards);
                 // if more than one attacker and we have first attacker again - reset pass counter
                 if (mAttackers.size() > 1 && mCurrentRoundAttackerId == mAttackers[0]) {
                     mPassedCounter = 0;
@@ -607,24 +611,17 @@ if (mQuit.get()) { \
 void Engine::dealCards()
 {
     // deal order:
-    // 1. first attacker
-    // 2. defender
-    // 3. rest attackers
-
+    // from current attacker
     std::map<const PlayerId*, unsigned int> oldCardsAmount;
     std::vector<CardSet*> cards;
 
-    cards.push_back(&mPlayersCards[mAttackers[0]]);
-    oldCardsAmount[mAttackers[0]] = cards[0]->size();
+    const PlayerId* currentPlayer = mCurrentPlayer;
 
-    cards.push_back(&mPlayersCards[mDefender]);
-    oldCardsAmount[mDefender] = cards[1]->size();
-
-    for(std::vector<const PlayerId*>::const_iterator it = mAttackers.begin() + 1; it != mAttackers.end(); ++it) {
-        CardSet& set = mPlayersCards[*it];
-        cards.push_back(&set);
-        oldCardsAmount[*it] = set.size();
-    }
+    do {
+        cards.push_back(&mPlayersCards[currentPlayer]);
+        oldCardsAmount[currentPlayer] = mPlayersCards[currentPlayer].size();
+        currentPlayer = Rules::pickNext(mGeneratedIds, currentPlayer);
+    } while (currentPlayer != mCurrentPlayer);
 
     lock();
     Rules::deal(*mDeck, cards);

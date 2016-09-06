@@ -14,6 +14,7 @@ CONFIG -= app_bundle
 QMAKE_CXXFLAGS += -Wall -Wextra
 
 INCLUDEPATH += include
+DEPENDPATH += include
 
 TEMPLATE = app
 
