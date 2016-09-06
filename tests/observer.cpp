@@ -154,6 +154,11 @@ void Observer::save(DataWriter& writer)
     }
 }
 
+void Observer::quit()
+{
+    // do nothing
+}
+
 void Observer::loadRoundData(DataReader& reader, RoundData& roundData){
     unsigned int players;
     reader.read(players);

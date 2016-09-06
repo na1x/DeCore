@@ -56,6 +56,12 @@ void SaveRestoreTest::WaitPlayer::processMove()
     }
 }
 
+void SaveRestoreTest::WaitPlayer::quit()
+{
+    BasePlayer::quit();
+    mSyncData.signalMove();
+}
+
 SaveRestoreTest::DefendWaitPlayer::DefendWaitPlayer(PlayerSyncData& syncData, unsigned int moveCount)
     : WaitPlayer(syncData, moveCount)
 {
@@ -180,8 +186,6 @@ void SaveRestoreTest::test(Player& player0, Player& player1, Player& restoredPla
     engine->save(savedData);
     // request quit
     engine->quit();
-    // ping player one to return from "attack" method
-    syncData.signalMove();
 
     pthread_join(engineThread, NULL);
 

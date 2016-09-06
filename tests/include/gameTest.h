@@ -63,6 +63,7 @@ private:
             const std::vector<decore::Card>& defendCards);
         void save(decore::DataWriter& writer);
         void init(decore::DataReader& reader);
+        void quit();
     };
 
     class AttackWithInvalidCardPlayer : public BasePlayer

@@ -664,6 +664,11 @@ void GameTest::TestPlayer0::init(decore::DataReader& reader)
     BasePlayer::init(reader);
 }
 
+void GameTest::TestPlayer0::quit()
+{
+    Observer::quit();
+}
+
 GameTest::AttackWithInvalidCardPlayer::AttackWithInvalidCardPlayer(const Card& card)
     : mInvalidCard(card)
     , mDontCheckCardExist(false)

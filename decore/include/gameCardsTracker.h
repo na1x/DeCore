@@ -159,6 +159,7 @@ public:
         const Suit& trumpSuit,
         const std::vector<Card>& attackCards,
         const std::vector<Card>& defendCards);
+    void quit();
 
     /**
      * @brief Returns cards in the game

@@ -364,7 +364,11 @@ void Engine::init(DataReader& reader, const std::vector<Player*> players, const 
 
 void Engine::quit()
 {
-    mQuit.set(true);
+    if (!mQuit.setAndGet(true)) {
+        for (std::vector<GameObserver*>::iterator it = mGameObservers.begin(); it != mGameObservers.end(); ++it) {
+            (*it)->quit();
+        }
+    }
 }
 
 Engine::PlayerIdImplementation::PlayerIdImplementation(unsigned int id)

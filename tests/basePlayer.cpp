@@ -135,6 +135,11 @@ void BasePlayer::init(DataReader& reader)
     }
 }
 
+void BasePlayer::quit()
+{
+    // do nothing
+}
+
 const PlayerId* BasePlayer::id() const
 {
     return mId;

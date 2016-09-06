@@ -26,13 +26,26 @@ public:
         pthread_mutex_destroy(&mLock);
     }
 
-    void set(const T& data)
+    /**
+     * @brief Synchronously sets new value
+     * @param data value to set
+     * @return previsous value
+     */
+
+    T setAndGet(const T& data)
     {
+        T res;
         lock();
+        res = mData;
         mData = data;
         unlock();
+        return res;
     }
 
+    /**
+     * @brief Synchronously returns value
+     * @return value
+     */
     T get() const
     {
         T res;
@@ -42,11 +55,16 @@ public:
         return res;
     }
 private:
+    /**
+     * @brief Internal lock
+     */
     void lock() const
     {
         pthread_mutex_lock(&mLock);
     }
-
+    /**
+     * @brief Internal unlock
+     */
     void unlock() const
     {
         pthread_mutex_unlock(&mLock);

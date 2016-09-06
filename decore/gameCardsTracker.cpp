@@ -224,6 +224,11 @@ void GameCardsTracker::gameRestored(const std::vector<const PlayerId*>& playerId
     mTrumpSuit = trumpSuit;
 }
 
+void GameCardsTracker::quit()
+{
+    // do nothing
+}
+
 const CardSet &GameCardsTracker::gameCards() const
 {
     return mGameCards;

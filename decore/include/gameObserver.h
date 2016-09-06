@@ -106,7 +106,10 @@ public:
      * @see save()
      */
     virtual void init(DataReader& reader) = 0;
-    // TODO: add quit?
+    /**
+     * @brief Invoked by engine when quit is requested
+     */
+    virtual void quit() = 0;
 };
 
 }

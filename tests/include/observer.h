@@ -48,6 +48,7 @@ public:
         const std::vector<decore::Card>& attackCards,
         const std::vector<decore::Card>& defendCards);
     void save(decore::DataWriter& writer);
+    void quit();
 
     void init(decore::DataReader& reader);
 

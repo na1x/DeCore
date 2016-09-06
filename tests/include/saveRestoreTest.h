@@ -78,6 +78,7 @@ private:
     protected:
         WaitPlayer(PlayerSyncData& syncData, unsigned int moveCount);
         void processMove();
+        void quit();
     };
 
     class AttackWaitPlayer : public WaitPlayer

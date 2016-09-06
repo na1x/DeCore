@@ -36,6 +36,7 @@ public:
         const std::vector<Card>& defendCards);
     void save(DataWriter& writer);
     void init(DataReader& reader);
+    void quit();
 
     const PlayerId* id() const;
     const CardSet& cards(unsigned int index) const;
