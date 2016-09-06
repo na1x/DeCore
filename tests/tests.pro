@@ -27,7 +27,8 @@ SOURCES += \
     rulesTest.cpp \
     gameTest.cpp \
     saveRestoreTest.cpp \
-    basePlayer.cpp
+    basePlayer.cpp \
+    observer.cpp
 
 HEADERS += \
     include/cardTest.h \
@@ -36,7 +37,8 @@ HEADERS += \
     include/gameTest.h \
     include/defines.h \
     include/saveRestoreTest.h \
-    include/basePlayer.h
+    include/basePlayer.h \
+    include/observer.h
 
 INCLUDEPATH += $$PWD/../decore/include
 DEPENDPATH += $$PWD/../decore/include

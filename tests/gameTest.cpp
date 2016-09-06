@@ -145,7 +145,7 @@ void GameTest::testOneRound01()
 
     // check game started
     std::vector<Card> observerGameCards, deckCards;
-    std::copy(observer.mGameCards.begin(), observer.mGameCards.end(), std::back_inserter(observerGameCards));
+    std::copy(observer.gameCards().begin(), observer.gameCards().end(), std::back_inserter(observerGameCards));
     std::copy(deck.begin(), deck.end(), std::back_inserter(deckCards));
     // if deck is shuffled the observer should not receive same cards
     CPPUNIT_ASSERT(deckCards != observerGameCards);
@@ -158,10 +158,10 @@ void GameTest::testOneRound01()
     observers.push_back(&player1);
     for(std::vector<Observer*>::iterator it = observers.begin(); it != observers.end(); ++it) {
         Observer& currentObserver = **it;
-        CPPUNIT_ASSERT(deck.trumpSuit() == currentObserver.mTrumpSuit);
-        CPPUNIT_ASSERT(currentObserver.mPlayers == observer.mPlayers);
+        CPPUNIT_ASSERT(deck.trumpSuit() == currentObserver.trumpSuit());
+        CPPUNIT_ASSERT(currentObserver.players() == observer.players());
         std::vector<Card> currentObserverGameCards;
-        std::copy(currentObserver.mGameCards.begin(), currentObserver.mGameCards.end(), std::back_inserter(currentObserverGameCards));
+        std::copy(currentObserver.gameCards().begin(), currentObserver.gameCards().end(), std::back_inserter(currentObserverGameCards));
         CPPUNIT_ASSERT(currentObserverGameCards == observerGameCards);
     }
 
@@ -173,7 +173,7 @@ void GameTest::testOneRound01()
         // check deal
         CPPUNIT_ASSERT(player.cards(0).size() == MAX_CARDS);
         // compare last player's update in the round with observer
-        CPPUNIT_ASSERT(observer.mPlayersCards[player.id()] == player.cards(player.cardSets() - 1).size());
+        CPPUNIT_ASSERT(observer.playerCards(player.id()) == player.cards(player.cardSets() - 1).size());
     }
 
     // deck has cards for player0 and player1 to play the round without pitch from player2
@@ -515,9 +515,9 @@ void GameTest::testMoveTransfer00()
 
     CPPUNIT_ASSERT(engine.playRound());
 
-    CPPUNIT_ASSERT(!player0.mRoundsData.empty());
+    CPPUNIT_ASSERT(0 != player0.rounds());
 
-    const Observer::RoundData& round0 = *player0.mRoundsData[0];
+    const Observer::RoundData& round0 = *player0.roundData(0);
 
     CPPUNIT_ASSERT(1 == round0.mDroppedCards.size());
     CPPUNIT_ASSERT(checkCard(round0.mDroppedCards.at(playerIds[0]), deck[0]));
@@ -528,9 +528,9 @@ void GameTest::testMoveTransfer00()
 
     CPPUNIT_ASSERT(engine.getLoser() == player1.id());
 
-    CPPUNIT_ASSERT(2 == player0.mRoundsData.size());
+    CPPUNIT_ASSERT(2 == player0.rounds());
 
-    const Observer::RoundData& round1 = *player0.mRoundsData[1];
+    const Observer::RoundData& round1 = *player0.roundData(1);
 
     CPPUNIT_ASSERT(2 == round1.mDroppedCards.size());
     CPPUNIT_ASSERT(checkCard(round1.mDroppedCards.at(playerIds[2]), deck[2]));
@@ -553,8 +553,8 @@ void GameTest::testInvalidCards00()
 
     const CardSet& goneCards = tracker.goneCards();
     CPPUNIT_ASSERT(goneCards.find(player0.invalidCard()) == goneCards.end());
-    CPPUNIT_ASSERT(!observer.mRoundsData.empty());
-    CPPUNIT_ASSERT(observer.mRoundsData[0]->mDroppedCards.at(player0.id()).find(invalidCard) == observer.mRoundsData[0]->mDroppedCards.at(player0.id()).end());
+    CPPUNIT_ASSERT(0 != observer.rounds());
+    CPPUNIT_ASSERT(observer.roundData(0)->mDroppedCards.at(player0.id()).find(invalidCard) == observer.roundData(0)->mDroppedCards.at(player0.id()).end());
 }
 
 void GameTest::testInvalidCards01()
@@ -571,8 +571,8 @@ void GameTest::testInvalidCards01()
     playRound(player0, player1, tracker, observer);
     // invalid card should not left the game
     CPPUNIT_ASSERT(tracker.goneCards().find(player0.invalidCard()) == tracker.goneCards().end());
-    CPPUNIT_ASSERT(!observer.mRoundsData.empty());
-    CPPUNIT_ASSERT(observer.mRoundsData[0]->mDroppedCards.at(player0.id()).find(invalidCard) == observer.mRoundsData[0]->mDroppedCards.at(player0.id()).end());
+    CPPUNIT_ASSERT(0 != observer.rounds());
+    CPPUNIT_ASSERT(observer.roundData(0)->mDroppedCards.at(player0.id()).find(invalidCard) == observer.roundData(0)->mDroppedCards.at(player0.id()).end());
 }
 
 void GameTest::testInvalidCards02()
@@ -589,8 +589,8 @@ void GameTest::testInvalidCards02()
     playRound(player0, player1, tracker, observer);
     // invalid card should not left the game
     CPPUNIT_ASSERT(tracker.goneCards().find(player1.invalidCard()) == tracker.goneCards().end());
-    CPPUNIT_ASSERT(!observer.mRoundsData.empty());
-    CPPUNIT_ASSERT(observer.mRoundsData[0]->mDroppedCards.find(player1.id()) == observer.mRoundsData[0]->mDroppedCards.end());
+    CPPUNIT_ASSERT(0 != observer.rounds());
+    CPPUNIT_ASSERT(observer.roundData(0)->mDroppedCards.find(player1.id()) == observer.roundData(0)->mDroppedCards.end());
 }
 
 void GameTest::testInvalidCards03()
@@ -607,8 +607,8 @@ void GameTest::testInvalidCards03()
     playRound(player0, player1, tracker, observer);
     // invalid card should not left the game
     CPPUNIT_ASSERT(tracker.goneCards().find(player1.invalidCard()) == tracker.goneCards().end());
-    CPPUNIT_ASSERT(!observer.mRoundsData.empty());
-    CPPUNIT_ASSERT(observer.mRoundsData[0]->mDroppedCards.find(player1.id()) == observer.mRoundsData[0]->mDroppedCards.end());
+    CPPUNIT_ASSERT(0 != observer.rounds());
+    CPPUNIT_ASSERT(observer.roundData(0)->mDroppedCards.find(player1.id()) == observer.roundData(0)->mDroppedCards.end());
 }
 
 void GameTest::TestPlayer0::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> &players)

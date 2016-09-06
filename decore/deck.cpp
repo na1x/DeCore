@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <ctime>
 #include <cstdlib>
+#include <cassert>
 
 #include "deck.h"
 
@@ -33,7 +34,8 @@ unsigned int Deck::shuffle()
     clear();
     std::srand(std::time(NULL));
     while (!cards.empty()) {
-        int index = std::rand() * (cards.size() - 1) / RAND_MAX;
+        unsigned int index = std::rand() * (cards.size() - 1) / RAND_MAX;
+        assert(index < cards.size());
         Card card = cards[index];
         cards.erase(cards.begin() + index);
         push_back(card);

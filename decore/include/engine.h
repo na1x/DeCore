@@ -185,6 +185,13 @@ class Engine
      * Actual for restored game when attacker dropped card and defender should beat it
      */
     bool mPickAttackCardFromTable;
+
+    /**
+     * @brief Current index of the round, NULL if no current round
+     *
+     * It is just pointer to mRoundIndex
+     */
+    unsigned int* mCurrentRoundIndex;
 public:
     /**
      * @brief Ctor

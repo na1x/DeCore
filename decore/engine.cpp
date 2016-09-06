@@ -23,6 +23,7 @@ Engine::Engine()
     , mMaxAttackCards(0)
     , mDefendFailed(false)
     , mPickAttackCardFromTable(false)
+    , mCurrentRoundIndex(NULL)
 {
     pthread_mutex_init(&mLock, NULL);
 }
@@ -227,10 +228,12 @@ void Engine::save(DataWriter& writer) const
     // save current round index
     writer.write(mRoundIndex);
 
+    // save bool if round is running
+    writer.write(static_cast<bool>(mCurrentRoundIndex));
     // save current round related data
-    // save attackers
-    writer.write(mAttackers.size());
-    if (!mAttackers.empty()) {
+    if (mCurrentRoundIndex) {
+        // save attackers
+        writer.write(mAttackers.size());
         for (std::vector<const PlayerId*>::const_iterator it = mAttackers.begin(); it != mAttackers.end(); ++it) {
             writer.write(mGeneratedIds.index(*it));
         }
@@ -299,11 +302,14 @@ void Engine::init(DataReader& reader, const std::vector<Player*> players, const 
     // read current round index
     reader.read(mRoundIndex);
 
-    // read current round data
-    std::vector<const PlayerId*>::size_type attackersAmount;
-    reader.read(attackersAmount);
+    bool roundRunning;
+    reader.read(roundRunning);
+    if (roundRunning) {
+        mCurrentRoundIndex = &mRoundIndex;
+        // read current round data
+        std::vector<const PlayerId*>::size_type attackersAmount;
+        reader.read(attackersAmount);
 
-    if (attackersAmount) {
         while (attackersAmount--) {
             unsigned int attackerIndex;
             reader.read(attackerIndex);
@@ -350,9 +356,9 @@ void Engine::init(DataReader& reader, const std::vector<Player*> players, const 
         unsigned int observerDataStart = reader.position();
         (*it)->init(reader);
         unsigned int actualObserverDataSize = reader.position() - observerDataStart;
-        unsigned int expectedOberverDataSize;
-        reader.read(expectedOberverDataSize);
-        assert(actualObserverDataSize == expectedOberverDataSize);
+        unsigned int expectedObserverDataSize;
+        reader.read(expectedObserverDataSize);
+        assert(actualObserverDataSize == expectedObserverDataSize);
     }
 }
 
@@ -446,11 +452,15 @@ if (mQuit.get()) { \
     return false; \
 }
 
-    std::for_each(mGameObservers.begin(), mGameObservers.end(), RoundStartNotification(mAttackers, mDefender, mRoundIndex));
-
-    if (mTableCards.empty()) {
+    lock();
+    if (!mCurrentRoundIndex) {
+        mCurrentRoundIndex = &mRoundIndex;
+        unlock();
+        std::for_each(mGameObservers.begin(), mGameObservers.end(), RoundStartNotification(mAttackers, mDefender, mRoundIndex));
         // deal cards
         dealCards();
+    } else {
+        unlock();
     }
 
     lock();
@@ -581,6 +591,7 @@ if (mQuit.get()) { \
     lock();
     mCurrentRoundAttackerId = NULL;
     mMaxAttackCards = 0;
+    mCurrentRoundIndex = NULL;
     unlock();
     CHECK_QUIT;
 

@@ -122,6 +122,15 @@ void Observer::loadMap(DataReader& reader, std::map<const PlayerId*, CardSet>& m
     }
 }
 
+void Observer::saveRoundData(DataWriter& writer, const RoundData& roundData){
+    writer.write(static_cast<unsigned int>(roundData.mPlayers.size()));
+    for(PlayerIds::const_iterator it = roundData.mPlayers.begin(); it != roundData.mPlayers.end(); ++it) {
+        writer.write(mPlayers.index(*it));
+    }
+    saveMap(writer, roundData.mDroppedCards);
+    saveMap(writer, roundData.mPickedUpCards);
+}
+
 void Observer::save(DataWriter& writer)
 {
     writer.write(mGameCards.begin(), mGameCards.end());
@@ -135,15 +144,26 @@ void Observer::save(DataWriter& writer)
     }
     writer.write(static_cast<unsigned int>(mRoundsData.size()));
     for (std::vector<const RoundData*>::const_iterator it = mRoundsData.begin(); it != mRoundsData.end(); ++it) {
-        const RoundData& roundData = **it;
-        writer.write(static_cast<unsigned int>(roundData.mPlayers.size()));
-        for(PlayerIds::const_iterator it = roundData.mPlayers.begin(); it != roundData.mPlayers.end(); ++it) {
-            writer.write(mPlayers.index(*it));
-        }
-        saveMap(writer, roundData.mDroppedCards);
-        saveMap(writer, roundData.mPickedUpCards);
+        saveRoundData(writer, **it);
     }
     writer.write(mCurrentRoundIndex);
+    // save if mCurrentRoundData exist
+    writer.write(static_cast<bool>(mCurrentRoundData));
+    if (mCurrentRoundData) {
+        saveRoundData(writer, *mCurrentRoundData);
+    }
+}
+
+void Observer::loadRoundData(DataReader& reader, RoundData& roundData){
+    unsigned int players;
+    reader.read(players);
+    while (players--) {
+        unsigned int playerIndex;
+        reader.read(playerIndex);
+        roundData.mPlayers.push_back(mPlayers[playerIndex]);
+    }
+    loadMap(reader, roundData.mDroppedCards);
+    loadMap(reader, roundData.mPickedUpCards);
 }
 
 void Observer::init(DataReader& reader)
@@ -164,17 +184,55 @@ void Observer::init(DataReader& reader)
     unsigned int rounds;
     reader.read(rounds);
     while (rounds--) {
-        unsigned int players;
-        reader.read(players);
-        RoundData roundData;
-        while (players--) {
-            unsigned int playerIndex;
-            reader.read(playerIndex);
-            roundData.mPlayers.push_back(mPlayers[playerIndex]);
-        }
-        loadMap(reader, roundData.mDroppedCards);
-        loadMap(reader, roundData.mPickedUpCards);
+        RoundData* roundData = new RoundData();
+        loadRoundData(reader, *roundData);
+        mRoundsData.push_back(roundData);
     }
     reader.read(mCurrentRoundIndex);
     mRestored = true;
+    bool currentRoundDataExist;
+    reader.read(currentRoundDataExist);
+    if (currentRoundDataExist) {
+        mCurrentRoundData = new RoundData();
+        loadRoundData(reader, *mCurrentRoundData);
+    }
 }
+
+const Observer::RoundData* Observer::currentRoundData() const
+{
+    return mCurrentRoundData;
+}
+
+const decore::CardSet& Observer::gameCards() const
+{
+    return mGameCards;
+}
+
+const Suit& Observer::trumpSuit() const
+{
+    return mTrumpSuit;
+}
+
+unsigned int Observer::playerCards(const PlayerId* playerId) const
+{
+    std::map<const decore::PlayerId*, unsigned int>::const_iterator it = mPlayersCards.find(playerId);
+    assert(it != mPlayersCards.end());
+    return it->second;
+}
+
+unsigned int Observer::rounds() const
+{
+    return mRoundsData.size();
+}
+
+const Observer::RoundData* Observer::roundData(unsigned int roundIndex) const
+{
+    assert(roundIndex < mRoundsData.size());
+    return mRoundsData[roundIndex];
+}
+
+const decore::PlayerIds& Observer::players() const
+{
+    return mPlayers;
+}
+

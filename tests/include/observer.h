@@ -19,6 +19,7 @@ public:
         std::map<const decore::PlayerId*, decore::CardSet> mPickedUpCards;
     };
 
+private:
     decore::PlayerIds mPlayers;
     decore::CardSet mGameCards;
     unsigned int mGameCardsCount;
@@ -26,6 +27,10 @@ public:
     std::map<const decore::PlayerId*, unsigned int> mPlayersCards;
     std::vector<const RoundData*> mRoundsData;
     unsigned int mCurrentRoundIndex;
+    RoundData* mCurrentRoundData;
+    bool mRestored;
+
+public:
 
     Observer();
     ~Observer();
@@ -46,12 +51,19 @@ public:
 
     void init(decore::DataReader& reader);
 
+    const RoundData* currentRoundData() const;
+    const decore::CardSet& gameCards() const;
+    const decore::Suit& trumpSuit() const;
+    unsigned int playerCards(const decore::PlayerId* playerId) const;
+    unsigned int rounds() const;
+    const RoundData* roundData(unsigned int roundIndex) const;
+    const decore::PlayerIds& players() const;
+
 private:
     void saveMap(decore::DataWriter& writer, const std::map<const decore::PlayerId*, decore::CardSet>& map);
+    void saveRoundData(decore::DataWriter& writer, const RoundData& roundData);
     void loadMap(decore::DataReader& reader, std::map<const decore::PlayerId*, decore::CardSet>& map);
-
-    RoundData* mCurrentRoundData;
-    bool mRestored;
+    void loadRoundData(decore::DataReader& reader, RoundData& roundData);
 };
 
 #endif /* OBSERVER_H */

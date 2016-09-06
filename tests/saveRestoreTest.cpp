@@ -278,6 +278,8 @@ void SaveRestoreTest::test00()
 
     CPPUNIT_ASSERT(36 == tracker.gameCards().size());
 
+    CPPUNIT_ASSERT(observer.currentRoundData());
+
     // continue game
     CPPUNIT_ASSERT(restored.playRound());
 
@@ -318,6 +320,8 @@ void SaveRestoreTest::test01()
     CPPUNIT_ASSERT(restoredPlayer1.cards(restoredPlayer1.cardSets() - 1).size() == MAX_CARDS - 1);
 
     CPPUNIT_ASSERT(36 == tracker.gameCards().size());
+
+    CPPUNIT_ASSERT(observer.currentRoundData());
 
     // continue game
     CPPUNIT_ASSERT(restored.playRound());
@@ -360,6 +364,8 @@ void SaveRestoreTest::test02()
 
     CPPUNIT_ASSERT(36 == tracker.gameCards().size());
 
+    CPPUNIT_ASSERT(observer.currentRoundData());
+
     // continue game
     CPPUNIT_ASSERT(restored.playRound());
 
@@ -398,6 +404,8 @@ void SaveRestoreTest::test03()
     CPPUNIT_ASSERT(restoredPlayer1.cards(restoredPlayer1.cardSets() - 1).size() == MAX_CARDS);
 
     CPPUNIT_ASSERT(36 == tracker.gameCards().size());
+
+    CPPUNIT_ASSERT(observer.currentRoundData());
 
     // continue game
     CPPUNIT_ASSERT(restored.playRound());
@@ -441,6 +449,7 @@ void SaveRestoreTest::test04()
 
     CPPUNIT_ASSERT(36 == tracker.gameCards().size());
 
+    CPPUNIT_ASSERT(observer.currentRoundData());
     // continue game
     CPPUNIT_ASSERT(restored.playRound());
 
