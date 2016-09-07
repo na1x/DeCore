@@ -24,6 +24,8 @@ class CardSet;
  * - etc
  *
  * Main purpose of the interface is UI update (with conjunction of local Player implementation).
+ *
+ * All methods except save() and quit() invoked from one thread.
  */
 class GameObserver
 {
@@ -93,7 +95,8 @@ public:
     /**
      * @brief Implementation can save its internal data to the `writer`
      *
-     * Data written to the `writer` will be provided to init() with `reader` parameter
+     * Data written to the `writer` will be provided to init() with `reader` parameter.
+     * Invoked from other thread.
      * @param writer data destination
      * @see init()
      */
@@ -108,6 +111,10 @@ public:
     virtual void init(DataReader& reader) = 0;
     /**
      * @brief Invoked by engine when quit is requested
+     *
+     * The method invoked from other thread, the implementation could be "inside" execution of other methods (except save()).
+     * Implementation should signal internally to terminate execution of the rest methods (except save()) as fast as possible
+     * to let engine quit Engine::playRound().
      */
     virtual void quit() = 0;
 };

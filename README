@@ -4,6 +4,13 @@ Developed with c++ the engine is aimed to be cross-platform and portable (where 
 Please refer to wiki documentation for further details.
 
 
+Requirements:
+    decore lib:
+        - pthreads
+    tests:
+        - pthreads
+        - cppunit
+
 Building library:
 	cd decore && qmake decore.pro && make
 
