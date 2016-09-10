@@ -22,3 +22,54 @@ Or to build library and tests at once:
 
 Building doxygen documentation:
 	doxygen doxygen.cfg
+
+
+Sample usage of the library:
+
+	YourPlayerImplementation player0, player1;
+	YourObserverImplementation observer;
+
+	Engine engine;
+
+	// add players
+	engine.add(player0);
+	engine.add(player1);
+
+	// add optional observer
+	engine.addGameObserver(observer);
+
+	// prepare deck
+	Deck deck;
+
+	Rank ranks[] = {
+	    RANK_6,
+	    RANK_7,
+	    RANK_8,
+	    RANK_9,
+	    RANK_10,
+	    RANK_JACK,
+	    RANK_QUEEN,
+	    RANK_KING,
+	    RANK_ACE,
+	};
+
+	Suit suits[] = {
+	    SUIT_SPADES,
+	    SUIT_HEARTS,
+	    SUIT_DIAMONDS,
+	    SUIT_CLUBS,
+	};
+
+	deck.generate(ranks, sizeof(ranks) / sizeof(ranks[0]), suits, sizeof(suits) / sizeof(suits[0]));
+	deck.shuffle();
+
+	// set deck
+	engine.setDeck(deck);
+
+	// play game
+	while(engine.playRound());
+
+	// get loser
+	// loser is NULL in case of draw
+	const PlayerId* loser = engine.getLoser();
+

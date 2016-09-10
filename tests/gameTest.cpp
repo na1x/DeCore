@@ -658,6 +658,48 @@ void GameTest::testInvalidCards03()
     CPPUNIT_ASSERT(observer.roundData(0)->mDroppedCards.find(player1.id()) == observer.roundData(0)->mDroppedCards.end());
 }
 
+void GameTest::fullFlow()
+{
+    TestPlayer0 player0, player1;
+    Engine engine;
+    Observer observer;
+
+    engine.add(player0);
+    engine.add(player1);
+
+    engine.addGameObserver(observer);
+
+    Deck deck;
+
+    Rank ranks[] = {
+        RANK_6,
+        RANK_7,
+        RANK_8,
+        RANK_9,
+        RANK_10,
+        RANK_JACK,
+        RANK_QUEEN,
+        RANK_KING,
+        RANK_ACE,
+    };
+
+    Suit suits[] = {
+        SUIT_SPADES,
+        SUIT_HEARTS,
+        SUIT_DIAMONDS,
+        SUIT_CLUBS,
+    };
+
+    deck.generate(ranks, sizeof(ranks) / sizeof(ranks[0]), suits, sizeof(suits) / sizeof(suits[0]));
+
+    engine.setDeck(deck);
+
+    while(engine.playRound());
+    CPPUNIT_ASSERT(observer.rounds() == 10);
+    CPPUNIT_ASSERT(engine.getLoser() == player1.id());
+}
+
+
 void GameTest::TestPlayer0::gameStarted(const Suit &trumpSuit, const CardSet &cardSet, const std::vector<const PlayerId *> &players)
 {
     Observer::gameStarted(trumpSuit, cardSet, players);

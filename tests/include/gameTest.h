@@ -26,6 +26,7 @@ class GameTest: public CppUnit::TestFixture
     CPPUNIT_TEST(testInvalidCards01);
     CPPUNIT_TEST(testInvalidCards02);
     CPPUNIT_TEST(testInvalidCards03);
+    CPPUNIT_TEST(fullFlow);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -44,6 +45,7 @@ public:
     void testInvalidCards01();
     void testInvalidCards02();
     void testInvalidCards03();
+    void fullFlow();
 
 private:
     class TestPlayer0 : public BasePlayer, public Observer

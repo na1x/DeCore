@@ -16,6 +16,55 @@
  * The "DeCore" is a Russian card game engine.
  *
  * Developed with c++ the engine is aimed to be cross-platform and portable (where c++ is available).
+ *
+ *
+ * Basic usage of the classes:
+ *
+ *     YourPlayerImplementation player0, player1;
+ *     YourObserverImplementation observer;
+ *
+ *     Engine engine;
+ *
+ *     // add players
+ *     engine.add(player0);
+ *     engine.add(player1);
+ *
+ *     // add optional observer
+ *     engine.addGameObserver(observer);
+ *
+ *     // prepare deck
+ *     Deck deck;
+ *
+ *     Rank ranks[] = {
+ *         RANK_6,
+ *         RANK_7,
+ *         RANK_8,
+ *         RANK_9,
+ *         RANK_10,
+ *         RANK_JACK,
+ *         RANK_QUEEN,
+ *         RANK_KING,
+ *         RANK_ACE,
+ *     };
+ *
+ *     Suit suits[] = {
+ *         SUIT_SPADES,
+ *         SUIT_HEARTS,
+ *         SUIT_DIAMONDS,
+ *         SUIT_CLUBS,
+ *     };
+ *
+ *     deck.generate(ranks, sizeof(ranks) / sizeof(ranks[0]), suits, sizeof(suits) / sizeof(suits[0]));
+ *     deck.shuffle();
+ *
+ *     // set deck
+ *     engine.setDeck(deck);
+ *
+ *     // play game
+ *     while(engine.playRound());
+ *
+ *     // get loser, NULL in case of draw
+ *     const PlayerId* loser = engine.getLoser();
  */
 namespace decore
 {
